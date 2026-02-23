@@ -1,8 +1,6 @@
 services:
   backend:
     build: ./apps/backend
-    volumes:
-      - ${HOST_DB_PATH}:/app/data
     env_file:
       - ./apps/backend/.env
 

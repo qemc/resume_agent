@@ -1,10 +1,4 @@
 import {
-    sqliteTable,
-    text,
-    integer
-} from 'drizzle-orm/sqlite-core'
-
-import {
     type Contact,
     type Skill,
     type Language,
@@ -22,7 +16,15 @@ import type {
     Topic,
     WriterRedefinedTopic
 } from '../types/agent';
-import { uniqueIndex } from 'drizzle-orm/sqlite-core'
+import {
+    pgTable,
+    serial,
+    uniqueIndex,
+    timestamp,
+    integer,
+    text,
+    jsonb
+} from 'drizzle-orm/pg-core';
 
 
 
@@ -34,103 +36,103 @@ export type TopicDbInsert = Omit<TopicDb, 'id' | 'createdAt'>
 
 
 
-export const users = sqliteTable('users', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const users = pgTable('users', {
+    id: serial('id').primaryKey(),
     email: text('email').notNull().unique(),
     password: text('password').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const resumes = sqliteTable('resumes', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const resumes = pgTable('resumes', {
+    id: serial('id').primaryKey(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    contact: text('contact', { mode: 'json' })
+    contact: jsonb('contact')
         .$type<Contact>()
         .notNull(),
-    skills: text('skills', { mode: 'json' })
+    skills: jsonb('skills')
         .$type<Skill[]>()
         .notNull(),
-    languages: text('languages', { mode: 'json' })
+    languages: jsonb('languages')
         .$type<Language[]>()
         .notNull(),
-    interests: text('interests', { mode: 'json' })
+    interests: jsonb('interests')
         .$type<Interest[]>()
         .notNull(),
     summary: text('summary')
 })
 
-export const experiences = sqliteTable('experiences', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const experiences = pgTable('experiences', {
+    id: serial('id').primaryKey(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    experience: text('experience', { mode: 'json' })
+    experience: jsonb('experience')
         .$type<ExperienceInput>()
         .notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
 
-export const ai_enhanced_experience = sqliteTable('ai_enhanced_experience', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const ai_enhanced_experience = pgTable('ai_enhanced_experience', {
+    id: serial('id').primaryKey(),
     experience_id: integer('experience_id').references(() => experiences.id, { onDelete: 'cascade' })
         .notNull(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    experience: text('experience', { mode: 'json' })
+    experience: jsonb('experience')
         .$type<WriterRedefinedTopic[]>()
         .notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (t) => ({
     unq: uniqueIndex('one_enhance_per_exp').on(t.user_id, t.experience_id)
 }))
+// it is about maintaining one ehnance per experience
 
 
-
-export const certificates = sqliteTable('certificates', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const certificates = pgTable('certificates', {
+    id: serial('id').primaryKey(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    certificate: text('certificate', { mode: 'json' })
+    certificate: jsonb('certificate')
         .$type<CertificateInput>()
         .notNull()
 })
 
-export const projects = sqliteTable('projects', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const projects = pgTable('projects', {
+    id: serial('id').primaryKey(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    project: text('project', { mode: 'json' })
+    project: jsonb('project')
         .$type<ProjectInput>()
         .notNull()
 })
 
-export const careerPaths = sqliteTable('career_paths', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const careerPaths = pgTable('career_paths', {
+    id: serial('id').primaryKey(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
     name: text('name').notNull(),
     description: text('description').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export const topics = sqliteTable('topics', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+export const topics = pgTable('topics', {
+    id: serial('id').primaryKey(),
     career_path_id: integer('career_path_id')
         .references(() => careerPaths.id, { onDelete: 'cascade' })
         .notNull(),
@@ -141,8 +143,8 @@ export const topics = sqliteTable('topics', {
         .references(() => experiences.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    topic_text: text('topic', { mode: 'json' })
+    topic_text: text('topic')
         .$type<Topic>(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 

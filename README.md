@@ -13,7 +13,7 @@ resume-builder/
     └── shared/      # Shared TypeScript types
 ```
 
-**Backend:** Fastify, Drizzle ORM (SQLite), LangChain/LangGraph (OpenAI), JWT auth  
+**Backend:** Fastify, Drizzle ORM (Postgres), LangChain/LangGraph (OpenAI), JWT auth  
 **Frontend:** Vite, React, Axios with JWT refresh interceptor
 
 ## Setup
