@@ -143,7 +143,7 @@ export const topics = pgTable('topics', {
         .references(() => experiences.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    topic_text: text('topic')
+    topic_text: jsonb('topic')
         .$type<Topic>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 })
