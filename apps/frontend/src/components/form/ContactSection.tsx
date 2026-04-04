@@ -59,23 +59,23 @@ export function ContactSection({ data, onChange, extraHeaderAction, lang = 'EN' 
                 <Input
                     label={t.firstName}
                     required
-                    value={data.firstName}
-                    onChange={(e) => onChange('firstName', e.target.value)}
+                    value={data.first_name}
+                    onChange={(e) => onChange('first_name', e.target.value)}
                     placeholder={lang === 'EN' ? 'John' : 'Jan'}
                 />
                 <Input
                     label={t.lastName}
                     required
-                    value={data.lastName}
-                    onChange={(e) => onChange('lastName', e.target.value)}
+                    value={data.last_name}
+                    onChange={(e) => onChange('last_name', e.target.value)}
                     placeholder={lang === 'EN' ? 'Doe' : 'Kowalski'}
                 />
                 <Input
                     label={t.phone}
                     type="tel"
                     required
-                    value={data.phone}
-                    onChange={(e) => onChange('phone', e.target.value)}
+                    value={data.phone_number}
+                    onChange={(e) => onChange('phone_number', e.target.value)}
                     placeholder="+48 123 456 789"
                 />
                 <Input

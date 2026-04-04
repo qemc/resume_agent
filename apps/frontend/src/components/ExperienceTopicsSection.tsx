@@ -70,7 +70,7 @@ export function ExperienceTopicsSection({
     onTopicsChanged,
 }: ExperienceTopicsSectionProps) {
     const t = labels[lang];
-    const expData = experience.experience;
+
 
     // Global generation context (persists across route changes)
     const {
@@ -148,7 +148,7 @@ export function ExperienceTopicsSection({
                 careerPathId,
                 lang,
                 experienceId: experience.id,
-                body: { id: topic.id, topic: topic.topic_text.topic, userHint: hint },
+                body: { id: topic.id, topic: topic.topic_text, userHint: hint },
             },
             (regenerated) => {
                 // If still mounted, update immediately
@@ -161,7 +161,7 @@ export function ExperienceTopicsSection({
     // ── Edit ──
     const handleStartEdit = (topic: TopicRow) => {
         setEditingId(topic.id);
-        setEditText(topic.topic_text.topic);
+        setEditText(topic.topic_text);
     };
 
     const handleSaveEdit = async () => {
@@ -227,7 +227,7 @@ export function ExperienceTopicsSection({
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <h3 className="text-lg font-semibold text-foreground">
-                    {expData.company} — {expData.position}
+                    {experience.company} — {experience.position}
                 </h3>
                 <div className="flex gap-2">
                     <Button
@@ -311,7 +311,7 @@ export function ExperienceTopicsSection({
                                                 {t.regenerating}
                                             </span>
                                         ) : (
-                                            topic.topic_text.topic
+                                            topic.topic_text
                                         )}
                                     </span>
                                     {!isRegenerating(topic.id) && (
@@ -396,7 +396,7 @@ export function ExperienceTopicsSection({
                     <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
                         <h3 className="font-semibold mb-1">{t.regenerateTitle}</h3>
                         <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                            "{regenerateTargetTopic.topic_text.topic}"
+                            "{regenerateTargetTopic.topic_text}"
                         </p>
                         <Textarea
                             value={regenerateHint}

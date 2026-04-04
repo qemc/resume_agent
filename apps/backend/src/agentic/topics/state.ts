@@ -1,7 +1,7 @@
 import { Annotation } from "@langchain/langgraph";
 import type {
     AgentStatus,
-    WriterRedefinedTopic,
+    WriterRedefinedBulletPoint,
     CareerPath,
     Topic
 } from "../../types/agent";
@@ -13,7 +13,7 @@ export const State = Annotation.Root({
     careerPathId: Annotation<number>(),
 
 
-    writerRedefinedTopics: Annotation<WriterRedefinedTopic[]>({
+    redefinedBulletPoints: Annotation<WriterRedefinedBulletPoint[]>({
         reducer: (x, y) => y ?? x,
         default: () => []
     }),

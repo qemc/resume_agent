@@ -2,11 +2,10 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db";
-import { careerPaths, topics, users } from "../db/schema";
+import { careerPaths, topics } from "../db/schema";
 import { AppError, ERRORS } from "../../utils/errors";
-import type { CareerPath, Topic } from "../types/agent";
+import type { CareerPath } from "../types/agent";
 import { topicsAgent } from "../agentic/topics/topics";
-import type { TopicDbInsert } from "../db/schema";
 import { generateSingleTopic } from "../agentic/topics/singleTopic";
 import { trackGenerateAll, untrackGenerateAll, trackRegenerate, untrackRegenerate, getActiveGenerations } from "../generationTracker";
 
@@ -32,6 +31,7 @@ const expSingleTopicSchema = z.object({
 const topicSchema = z.object({
     topic: z.string(),
 })
+
 const updateTopicSchema = z.object({
     topic: z.string(),
     id: z.coerce.number().int().positive(),
@@ -55,10 +55,8 @@ export async function topicRoutes(app: FastifyInstance) {
         return items
     });
 
-    // save all topics related to single experience
-
+    // update single topic text
     app.patch('/topics/:careerPath/:lang/:experience/:id', { onRequest: [app.auth] }, async (req, reply) => {
-
 
         const parsedIncomingItem = updateTopicSchema.safeParse(req.body)
         if (!parsedIncomingItem.success) throw new AppError(ERRORS.INVALID_REQUEST);
@@ -76,35 +74,20 @@ export async function topicRoutes(app: FastifyInstance) {
         })
         if (!existingItem) throw new AppError(ERRORS.NOT_FOUND);
 
-        const newTopic: Topic = {
-            topic: parsedIncomingItem.data.topic,
-            preTopic: existingItem.topic_text.preTopic
-        }
-
-        const updated = {
-            ...existingItem,
-            topic_text: newTopic
-        }
-
         await db.update(topics)
-            .set({ topic_text: newTopic }) // Write the new JSON blob
+            .set({ topic_text: parsedIncomingItem.data.topic })
             .where(
                 and(
                     eq(topics.id, parsedIncomingItem.data.id),
                     eq(topics.user_id, req.user.id)
                 )
-            );     // To the correct row
+            );
 
-        return updated;
+        return { ...existingItem, topic_text: parsedIncomingItem.data.topic };
     })
 
 
-    // regenerate all topics once again (only here the items would need to be inserted to the data base upon creation be an agent) This would return the ids, of freshly created items, once the answer is received, the frontend would call get option
-    // Run generate all topics agent
-    // Insert those into the data base
-    // Query those from the data base once again, to get items with ID assigned
-    // Return all items to the frontend
-
+    // Generate all topics for an experience via AI agent
     app.post('/topics/generate_all/:careerPath/:lang/:experience', { onRequest: app.auth }, async (req, reply) => {
 
         const { lang, careerPath, experience } = expTopicSchema.parse(req.params)
@@ -119,15 +102,15 @@ export async function topicRoutes(app: FastifyInstance) {
 
             if (!newTopics) throw new AppError(ERRORS.AI_ERROR);
 
-            const topicItems: TopicDbInsert[] = newTopics.careerPathTopics.map((item) => {
-                return {
-                    user_id: req.user.id,
-                    resume_lang: lang,
-                    career_path_id: careerPath,
-                    experience_id: experience,
-                    topic_text: item
-                } as TopicDbInsert
-            })
+            // Map agent output (Topic[]) to flat DB rows
+            const topicRows = newTopics.careerPathTopics.map((item) => ({
+                user_id: req.user.id,
+                resume_lang: lang,
+                career_path_id: careerPath,
+                experience_id: experience,
+                topic_text: item.topic,
+                topic_quotes: item.preTopic.refinedQuotes,
+            }))
 
             // Remove existing topics for this experience before inserting new ones
             await db.delete(topics).where(
@@ -140,7 +123,7 @@ export async function topicRoutes(app: FastifyInstance) {
             );
 
             const inserted = await db.insert(topics)
-                .values(topicItems)
+                .values(topicRows)
                 .returning()
 
             return reply.status(201).send(inserted)
@@ -150,12 +133,7 @@ export async function topicRoutes(app: FastifyInstance) {
     })
 
 
-    // regenerate sngle topic
-    // Run generate all topics agent
-    // Insert the item into the data base
-    // Query the item from the data base once again, to get item's new ID assigned
-    // Return a single item to the frontend
-
+    // Regenerate a single topic via AI agent
     app.post('/topics/generate_single/:careerPath/:lang/:experience', { onRequest: app.auth }, async (req, reply) => {
 
         const { lang, careerPath, experience } = expTopicSchema.parse(req.params)
@@ -184,11 +162,17 @@ export async function topicRoutes(app: FastifyInstance) {
             description: careerPathData.description
         }
 
+        // Reconstruct the WriterRedefinedBulletPoint from flat columns
+        const preTopic = {
+            bulletPointProposal: topicData.topic_text,
+            refinedQuotes: topicData.topic_quotes,
+        }
+
         trackRegenerate(req.user.id, parsedBody.data.id);
         try {
             const newTopic = await generateSingleTopic(
                 careerPathAdjusted,
-                topicData.topic_text.preTopic,
+                preTopic,
                 lang,
                 parsedBody.data.userHint,
                 parsedBody.data.topic
@@ -196,21 +180,18 @@ export async function topicRoutes(app: FastifyInstance) {
 
             if (!newTopic) throw new AppError(ERRORS.AI_ERROR);
 
-            const updated = {
-                ...topicData,
-                topic_text: newTopic
-            }
-
             await db.update(topics)
-                .set({ topic_text: newTopic }) // Write the new JSON blob
+                .set({
+                    topic_text: newTopic.topic,
+                    topic_quotes: newTopic.preTopic.refinedQuotes,
+                })
                 .where(eq(topics.id, topicData.id));
 
-            return updated
+            return { ...topicData, topic_text: newTopic.topic, topic_quotes: newTopic.preTopic.refinedQuotes }
         } finally {
             untrackRegenerate(req.user.id, parsedBody.data.id);
         }
     })
-
 
 
     // create single topic
@@ -218,26 +199,16 @@ export async function topicRoutes(app: FastifyInstance) {
 
         const { careerPath, lang, experience } = expTopicSchema.parse(req.params)
 
-        const bodySchema = z.object({ topic_text: topicSchema })
-
-        const parsedTopic = bodySchema.safeParse(req.body)
+        const parsedTopic = topicSchema.safeParse(req.body)
         if (!parsedTopic.success) throw new AppError(ERRORS.INVALID_REQUEST);
-
-        const topic: Topic = {
-            topic: parsedTopic.data.topic_text.topic,
-            preTopic: {
-                redefinedTopic: '',
-                refinedQuotes: []
-            }
-        }
-
 
         const [inserted] = await db.insert(topics).values({
             career_path_id: careerPath,
             user_id: req.user.id,
             experience_id: experience,
             resume_lang: lang,
-            topic_text: topic
+            topic_text: parsedTopic.data.topic,
+            topic_quotes: [],
         }).returning()
 
         return reply.status(201).send(inserted)

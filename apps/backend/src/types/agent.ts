@@ -1,6 +1,6 @@
 import {
-    workstreamSchema,
-    writerRedefinedTopicSchema
+    bulletPointTopicProposal,
+    writerRedefinedBulletPoints
 } from "../agentic/enhance/state";
 import z from "zod";
 import type { CareerPathsDb } from "../db/schema";
@@ -9,8 +9,8 @@ import type { CareerPathsDb } from "../db/schema";
 export type AgentStatus = 'success' | 'failed' | 'init';
 
 // ENHANCE
-export type Workstream = z.infer<typeof workstreamSchema>
-export type WriterRedefinedTopic = z.infer<typeof writerRedefinedTopicSchema>
+export type BulletPointTopicProposal = z.infer<typeof bulletPointTopicProposal>
+export type WriterRedefinedBulletPoint = z.infer<typeof writerRedefinedBulletPoints>
 
 // TOPICS
 export type CareerPath = {
@@ -19,5 +19,5 @@ export type CareerPath = {
 }
 export type Topic = {
     topic: string,
-    preTopic: WriterRedefinedTopic
+    preTopic: WriterRedefinedBulletPoint
 }

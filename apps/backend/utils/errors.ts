@@ -56,7 +56,11 @@ export const ERRORS = {
         message: 'Registration is currently disabled',
         status: 403
     },
-
+    ALREADY_EXISTS: {
+        code: 'EXIST_001',
+        message: 'Item already exisits',
+        status: 467
+    },
     // internal routes errors
     INT_KEY_MISSCONFIG: {
         code: 'INT_KEY_001',

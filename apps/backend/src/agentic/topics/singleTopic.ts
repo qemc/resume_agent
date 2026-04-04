@@ -1,6 +1,6 @@
 import type {
     CareerPath,
-    WriterRedefinedTopic,
+    WriterRedefinedBulletPoint,
     Topic,
 } from "../../types/agent";
 import z from "zod";
@@ -17,7 +17,7 @@ import type { resumeLanguage } from "../../types/resume";
 
 
 
-export async function generateSingleTopic(careerPath: CareerPath, writerRedefinedTopic: WriterRedefinedTopic, lang: resumeLanguage, userComment: string = '', previousItem: string = '') {
+export async function generateSingleTopic(careerPath: CareerPath, redefinedBulletPoint: WriterRedefinedBulletPoint, lang: resumeLanguage, userComment: string = '', previousItem: string = '') {
 
     let outputDsc_strategy_and_reasoning = single_topic_reason_en
     let outputDsc_final_bullet_point = bullet_point_en
@@ -57,8 +57,8 @@ export async function generateSingleTopic(careerPath: CareerPath, writerRedefine
 
     const chain = singleTopicPrompt.pipe(topicModel)
     const result = await chain.invoke({
-        topicName: writerRedefinedTopic.redefinedTopic,
-        topicDescription: writerRedefinedTopic.refinedQuotes.join('\n'),
+        topicName: redefinedBulletPoint.bulletPointProposal,
+        topicDescription: redefinedBulletPoint.refinedQuotes.join('\n'),
         careerPathName: careerPath.name,
         careerPathDescription: careerPath.description,
         userHint: userCommentAdjusted,
@@ -67,7 +67,7 @@ export async function generateSingleTopic(careerPath: CareerPath, writerRedefine
 
     const finalTopic: Topic = {
         topic: result.final_bullet_point,
-        preTopic: writerRedefinedTopic
+        preTopic: redefinedBulletPoint
     }
 
     return finalTopic

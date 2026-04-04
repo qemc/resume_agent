@@ -40,6 +40,7 @@ app.setErrorHandler((error, request, reply) => {
         })
     }
 
+    console.error("DEBUG FASTIFY 500 ERROR:", error);
     return reply.status(500).send({
         success: false,
         code: 'SYS_000',

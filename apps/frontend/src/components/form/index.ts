@@ -5,4 +5,4 @@ export { CertificatesSection } from './CertificatesSection';
 export { ProjectsSection } from './ProjectsSection';
 export { LanguagesSection } from './LanguagesSection';
 export { InterestsSection } from './InterestsSection';
-export * from './SummarySection';
+export { EducationSection } from './EducationSection';

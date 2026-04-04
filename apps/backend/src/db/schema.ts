@@ -1,20 +1,9 @@
-import {
-    type Contact,
-    type Skill,
-    type Language,
-    type Interest,
-    type ExperienceInput,
-    type CertificateInput,
-    type ProjectInput
-} from "../types/resume";
-
 import type {
     InferSelectModel
 } from 'drizzle-orm';
 
 import type {
-    Topic,
-    WriterRedefinedTopic
+    WriterRedefinedBulletPoint
 } from '../types/agent';
 import {
     pgTable,
@@ -23,7 +12,8 @@ import {
     timestamp,
     integer,
     text,
-    jsonb
+    jsonb,
+    boolean
 } from 'drizzle-orm/pg-core';
 
 
@@ -43,25 +33,51 @@ export const users = pgTable('users', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const resumes = pgTable('resumes', {
+
+export const contact_data = pgTable('contact_data', {
     id: serial('id').primaryKey(),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    contact: jsonb('contact')
-        .$type<Contact>()
+    email: text('email').notNull(),
+    phone_number: text('phone_number').notNull(),
+    first_name: text('first_name').notNull(),
+    last_name: text('last_name').notNull(),
+    linkedin: text('linkedin').notNull(),
+    github: text('github').notNull(),
+    website: text('website').notNull(),
+    location: text('location').notNull(),
+})
+
+export const skills = pgTable('skills', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
-    skills: jsonb('skills')
-        .$type<Skill[]>()
+    resume_lang: text('resume_lang').notNull(),
+    skill: text('skill').notNull(),
+    level: text('level'),
+    category: text('category')
+})
+
+export const languages = pgTable('languages', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
-    languages: jsonb('languages')
-        .$type<Language[]>()
+    resume_lang: text('resume_lang').notNull(),
+    name: text('name').notNull(),
+    level: text('level').notNull(),
+})
+
+export const interests = pgTable('interests', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
-    interests: jsonb('interests')
-        .$type<Interest[]>()
-        .notNull(),
-    summary: text('summary')
+    resume_lang: text('resume_lang').notNull(),
+    interest: text('interest').notNull(),
 })
 
 export const experiences = pgTable('experiences', {
@@ -70,32 +86,15 @@ export const experiences = pgTable('experiences', {
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    experience: jsonb('experience')
-        .$type<ExperienceInput>()
-        .notNull(),
+    company: text('company').notNull(),
+    position: text('position').notNull(),
+    start_date: text('start_date').notNull(),
+    end_date: text('end_date').notNull(),
+    current: boolean('current').notNull().default(false),
+    description: text('description').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
-
-
-export const ai_enhanced_experience = pgTable('ai_enhanced_experience', {
-    id: serial('id').primaryKey(),
-    experience_id: integer('experience_id').references(() => experiences.id, { onDelete: 'cascade' })
-        .notNull(),
-    user_id: integer('user_id')
-        .references(() => users.id, { onDelete: 'cascade' })
-        .notNull(),
-    resume_lang: text('resume_lang').notNull(),
-    experience: jsonb('experience')
-        .$type<WriterRedefinedTopic[]>()
-        .notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (t) => ({
-    unq: uniqueIndex('one_enhance_per_exp').on(t.user_id, t.experience_id)
-}))
-// it is about maintaining one ehnance per experience
-
 
 export const certificates = pgTable('certificates', {
     id: serial('id').primaryKey(),
@@ -103,9 +102,12 @@ export const certificates = pgTable('certificates', {
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    certificate: jsonb('certificate')
-        .$type<CertificateInput>()
-        .notNull()
+    certificate_name: text('certificate_name').notNull(),
+    issuer: text('issuer').notNull(),
+    issue_date: text('issue_date').notNull(),
+    expiry_date: text('expiry_date').notNull(),
+    credential_id: text('credential_id').notNull(),
+    url: text('url').notNull(),
 })
 
 export const projects = pgTable('projects', {
@@ -114,9 +116,22 @@ export const projects = pgTable('projects', {
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    project: jsonb('project')
-        .$type<ProjectInput>()
-        .notNull()
+    project_name: text('project_name').notNull(),
+    description: text('description').notNull(),
+    url: text('url').notNull(),
+})
+
+export const education = pgTable('education', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
+        .notNull(),
+    university: text('university').notNull(),
+    degree: text('degree').notNull(),
+    resume_lang: text('resume_lang').notNull(),
+    start_date: text('start_date').notNull(),
+    end_date: text('end_date').notNull(),
+    current: boolean('current').notNull().default(false)
 })
 
 export const careerPaths = pgTable('career_paths', {
@@ -131,6 +146,23 @@ export const careerPaths = pgTable('career_paths', {
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+export const ai_enhanced_experience = pgTable('ai_enhanced_experience', {
+    id: serial('id').primaryKey(),
+    experience_id: integer('experience_id').references(() => experiences.id, { onDelete: 'cascade' })
+        .notNull(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
+        .notNull(),
+    resume_lang: text('resume_lang').notNull(),
+    experience: jsonb('experience')
+        .$type<WriterRedefinedBulletPoint[]>()
+        .notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (t) => ({
+    unq: uniqueIndex('one_enhance_per_exp').on(t.user_id, t.experience_id)
+}))
+
 export const topics = pgTable('topics', {
     id: serial('id').primaryKey(),
     career_path_id: integer('career_path_id')
@@ -143,17 +175,7 @@ export const topics = pgTable('topics', {
         .references(() => experiences.id, { onDelete: 'cascade' })
         .notNull(),
     resume_lang: text('resume_lang').notNull(),
-    topic_text: jsonb('topic')
-        .$type<Topic>(),
+    topic_text: text('topic_text').notNull(),
+    topic_quotes: text('topic_quotes').array().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
-
-export const resume = pgTable('resume', {
-    id: serial('id').primaryKey(),
-    user_id: integer('user_id')
-        .references(() => users.id, { onDelete: 'cascade' })
-        .notNull(),
-    resume_description: text('resume_lang').notNull(),
-
 })

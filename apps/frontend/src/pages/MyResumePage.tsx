@@ -6,20 +6,16 @@ import {
     LanguagesSection,
     InterestsSection,
     ExperienceSection,
+    EducationSection,
     CertificatesSection,
     ProjectsSection,
-    SummarySection,
 } from '@/components/form';
 import type { Contact, Skill, Language, Interest, ResumeData, ResumeLang } from '@/types';
-import { generateId } from '@/lib/utils';
-import { emptyContact, emptyResumeData } from '@/lib/constants';
+import { emptyResumeData } from '@/lib/constants';
 import {
-    getResume,
-    createResume,
+    getContact,
+    createContact,
     updateContact,
-    updateSkills,
-    updateLanguages,
-    updateInterests,
     getExperiences,
     createExperience,
     updateExperience,
@@ -32,16 +28,32 @@ import {
     createProject,
     updateProject,
     deleteProject,
-    updateSummary,
+    getEducation,
+    createEducation,
+    updateEducation,
+    deleteEducation,
+    getSkills,
+    createSkill,
+    updateSkill,
+    deleteSkill,
+    getLanguages,
+    createLanguage,
+    updateLanguage,
+    deleteLanguage,
+    getInterests,
+    createInterest,
+    updateInterest,
+    deleteInterest,
 } from '@/services/resume';
 
 
 
 /**
  * My Resume Data Page
- * 
+ *
  * Single page with language toggle and all resume sections.
- * Supports EN (English) and PL (Polish) versions.
+ * Each entity (contact, skills, languages, interests, experiences,
+ * certificates, projects) is now a separate DB table with its own endpoints.
  */
 export function MyResumePage() {
     // Active language
@@ -53,8 +65,6 @@ export function MyResumePage() {
 
     // Original descriptions - stored at load time to compare at save time
     const [originalExperienceDescriptions, setOriginalExperienceDescriptions] = useState<Map<number, string>>(new Map());
-    const [originalCertificateNames, setOriginalCertificateNames] = useState<Map<number, string>>(new Map());
-    const [originalProjectDescriptions, setOriginalProjectDescriptions] = useState<Map<number, string>>(new Map());
 
     // Data for both languages
     const [enData, setEnData] = useState<ResumeData>(emptyResumeData);
@@ -69,14 +79,12 @@ export function MyResumePage() {
         EN: {
             title: 'My Resume Data',
             loading: 'Loading your resume data...',
-            noResume: 'No English resume yet. Save any section to create one.',
             save: 'Save',
             saving: 'Saving...',
         },
         PL: {
             title: 'Moje Dane CV',
             loading: 'Wczytywanie danych CV...',
-            noResume: 'Brak CV w języku polskim. Zapisz dowolną sekcję, aby utworzyć.',
             save: 'Zapisz',
             saving: 'Zapisywanie...',
         }
@@ -89,60 +97,56 @@ export function MyResumePage() {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                // Load both EN and PL data in parallel
-                const [enResume, enExps, enCerts, enProjs, plResume, plExps, plCerts, plProjs] = await Promise.all([
-                    getResume('EN'),
+                const [
+                    enContact, enExps, enEdus, enCerts, enProjs, enSkills, enLangs, enInts,
+                    plContact, plExps, plEdus, plCerts, plProjs, plSkills, plLangs, plInts,
+                ] = await Promise.all([
+                    getContact('EN'),
                     getExperiences('EN'),
+                    getEducation('EN'),
                     getCertificates('EN'),
                     getProjects('EN'),
-                    getResume('PL'),
+                    getSkills('EN'),
+                    getLanguages('EN'),
+                    getInterests('EN'),
+                    getContact('PL'),
                     getExperiences('PL'),
+                    getEducation('PL'),
                     getCertificates('PL'),
                     getProjects('PL'),
+                    getSkills('PL'),
+                    getLanguages('PL'),
+                    getInterests('PL'),
                 ]);
 
                 setEnData({
-                    resumeId: enResume?.id ?? null,
-                    contact: enResume?.contact ?? emptyContact,
-                    summary: enResume?.summary ?? '',
-                    skills: enResume?.skills ?? [],
-                    languages: enResume?.languages ?? [],
-                    interests: enResume?.interests ?? [],
+                    contact: enContact,
                     experienceRows: enExps,
+                    educationRows: enEdus,
                     certificateRows: enCerts,
                     projectRows: enProjs,
+                    skillRows: enSkills,
+                    languageRows: enLangs,
+                    interestRows: enInts,
                 });
 
                 setPlData({
-                    resumeId: plResume?.id ?? null,
-                    contact: plResume?.contact ?? emptyContact,
-                    summary: plResume?.summary ?? '',
-                    skills: plResume?.skills ?? [],
-                    languages: plResume?.languages ?? [],
-                    interests: plResume?.interests ?? [],
+                    contact: plContact,
                     experienceRows: plExps,
+                    educationRows: plEdus,
                     certificateRows: plCerts,
                     projectRows: plProjs,
+                    skillRows: plSkills,
+                    languageRows: plLangs,
+                    interestRows: plInts,
                 });
 
                 // Store original descriptions for save-time comparison
                 const expDescMap = new Map<number, string>();
                 [...enExps, ...plExps].forEach(row => {
-                    expDescMap.set(row.id, row.experience.description);
+                    expDescMap.set(row.id, row.description);
                 });
                 setOriginalExperienceDescriptions(expDescMap);
-
-                const certNameMap = new Map<number, string>();
-                [...enCerts, ...plCerts].forEach(row => {
-                    certNameMap.set(row.id, row.certificate.name);
-                });
-                setOriginalCertificateNames(certNameMap);
-
-                const projDescMap = new Map<number, string>();
-                [...enProjs, ...plProjs].forEach(row => {
-                    projDescMap.set(row.id, row.project.description);
-                });
-                setOriginalProjectDescriptions(projDescMap);
             } catch (error) {
                 console.error('Failed to load resume data:', error);
             } finally {
@@ -157,27 +161,26 @@ export function MyResumePage() {
     // Contact Handlers
     // ==========================================================================
     const handleContactChange = (field: keyof Contact, value: string) => {
-        setCurrentData(prev => ({ ...prev, contact: { ...prev.contact, [field]: value } }));
-    };
-
-    const handleSummaryChange = (value: string) => {
-        setCurrentData(prev => ({ ...prev, summary: value }));
+        setCurrentData(prev => ({
+            ...prev,
+            contact: prev.contact
+                ? { ...prev.contact, [field]: value }
+                : { id: 0, user_id: 0, resume_lang: activeLang, first_name: '', last_name: '', email: '', phone_number: '', linkedin: '', github: '', website: '', location: '', [field]: value }
+        }));
     };
 
     const handleSaveContact = async () => {
         setSavingSection('contact');
         try {
-            if (currentData.resumeId) {
+            if (currentData.contact?.id) {
                 await updateContact(activeLang, currentData.contact);
             } else {
-                const newResume = await createResume({
+                const contactToSave = currentData.contact ?? { first_name: '', last_name: '', email: '', phone_number: '', linkedin: '', github: '', website: '', location: '' };
+                const created = await createContact({
                     resume_lang: activeLang,
-                    contact: currentData.contact,
-                    skills: [],
-                    languages: [],
-                    interests: [],
+                    ...contactToSave,
                 });
-                setCurrentData(prev => ({ ...prev, resumeId: newResume.id }));
+                setCurrentData(prev => ({ ...prev, contact: created }));
             }
         } catch (error) {
             console.error('Failed to save contact:', error);
@@ -186,68 +189,53 @@ export function MyResumePage() {
         }
     };
 
-    const handleSaveSummary = async () => {
-        setSavingSection('summary');
+    // ==========================================================================
+    // Skills Handlers (each skill is a separate DB row)
+    // ==========================================================================
+    const handleAddSkill = async () => {
         try {
-            if (currentData.resumeId) {
-                await updateSummary(activeLang, currentData.summary);
-            } else {
-                const newResume = await createResume({
-                    resume_lang: activeLang,
-                    contact: currentData.contact,
-                    summary: currentData.summary,
-                    skills: [],
-                    languages: [],
-                    interests: [],
-                });
-                setCurrentData(prev => ({ ...prev, resumeId: newResume.id }));
-            }
+            const created = await createSkill(activeLang, { skill: '' });
+            setCurrentData(prev => ({
+                ...prev,
+                skillRows: [...prev.skillRows, created]
+            }));
         } catch (error) {
-            console.error('Failed to save summary:', error);
-        } finally {
-            setSavingSection(null);
+            console.error('Failed to create skill:', error);
         }
     };
 
-    // ==========================================================================
-    // Skills Handlers
-    // ==========================================================================
-    const handleAddSkill = () => {
-        setCurrentData(prev => ({
-            ...prev,
-            skills: [...prev.skills, { id: generateId(), name: '', level: 'beginner', category: '' }]
-        }));
-    };
-
-    const handleRemoveSkill = (id: string) => {
-        setCurrentData(prev => ({
-            ...prev,
-            skills: prev.skills.filter(s => s.id !== id)
-        }));
+    const handleRemoveSkill = async (id: string) => {
+        const numId = parseInt(id, 10);
+        try {
+            await deleteSkill(numId);
+            setCurrentData(prev => ({
+                ...prev,
+                skillRows: prev.skillRows.filter(s => s.id !== numId)
+            }));
+        } catch (error) {
+            console.error('Failed to delete skill:', error);
+        }
     };
 
     const handleUpdateSkill = (id: string, field: keyof Skill, value: string) => {
+        const numId = parseInt(id, 10);
         setCurrentData(prev => ({
             ...prev,
-            skills: prev.skills.map(s => s.id === id ? { ...s, [field]: value } : s)
+            skillRows: prev.skillRows.map(s => s.id === numId ? { ...s, [field]: value } : s)
         }));
     };
 
     const handleSaveSkills = async () => {
+        if (currentData.skillRows.length === 0) return;
+
         setSavingSection('skills');
         try {
-            if (currentData.resumeId) {
-                await updateSkills(activeLang, currentData.skills);
-            } else {
-                const newResume = await createResume({
-                    resume_lang: activeLang,
-                    contact: currentData.contact,
-                    skills: currentData.skills,
-                    languages: [],
-                    interests: [],
-                });
-                setCurrentData(prev => ({ ...prev, resumeId: newResume.id }));
-            }
+            await Promise.all(
+                currentData.skillRows.map(row => {
+                    const { id, user_id, resume_lang, ...data } = row;
+                    return updateSkill(row.id, data);
+                })
+            );
         } catch (error) {
             console.error('Failed to save skills:', error);
         } finally {
@@ -256,44 +244,52 @@ export function MyResumePage() {
     };
 
     // ==========================================================================
-    // Languages Handlers
+    // Languages Handlers (each language is a separate DB row)
     // ==========================================================================
-    const handleAddLanguage = () => {
-        setCurrentData(prev => ({
-            ...prev,
-            languages: [...prev.languages, { id: generateId(), name: '', level: 'B1' }]
-        }));
+    const handleAddLanguage = async () => {
+        try {
+            const created = await createLanguage(activeLang, { name: '', level: 'B1' });
+            setCurrentData(prev => ({
+                ...prev,
+                languageRows: [...prev.languageRows, created]
+            }));
+        } catch (error) {
+            console.error('Failed to create language:', error);
+        }
     };
 
-    const handleRemoveLanguage = (id: string) => {
-        setCurrentData(prev => ({
-            ...prev,
-            languages: prev.languages.filter(l => l.id !== id)
-        }));
+    const handleRemoveLanguage = async (id: string) => {
+        const numId = parseInt(id, 10);
+        try {
+            await deleteLanguage(numId);
+            setCurrentData(prev => ({
+                ...prev,
+                languageRows: prev.languageRows.filter(l => l.id !== numId)
+            }));
+        } catch (error) {
+            console.error('Failed to delete language:', error);
+        }
     };
 
     const handleUpdateLanguage = (id: string, field: keyof Language, value: string) => {
+        const numId = parseInt(id, 10);
         setCurrentData(prev => ({
             ...prev,
-            languages: prev.languages.map(l => l.id === id ? { ...l, [field]: value } : l)
+            languageRows: prev.languageRows.map(l => l.id === numId ? { ...l, [field]: value } : l)
         }));
     };
 
     const handleSaveLanguages = async () => {
+        if (currentData.languageRows.length === 0) return;
+
         setSavingSection('languages');
         try {
-            if (currentData.resumeId) {
-                await updateLanguages(activeLang, currentData.languages);
-            } else {
-                const newResume = await createResume({
-                    resume_lang: activeLang,
-                    contact: currentData.contact,
-                    skills: [],
-                    languages: currentData.languages,
-                    interests: [],
-                });
-                setCurrentData(prev => ({ ...prev, resumeId: newResume.id }));
-            }
+            await Promise.all(
+                currentData.languageRows.map(row => {
+                    const { id, user_id, resume_lang, ...data } = row;
+                    return updateLanguage(row.id, data);
+                })
+            );
         } catch (error) {
             console.error('Failed to save languages:', error);
         } finally {
@@ -302,44 +298,52 @@ export function MyResumePage() {
     };
 
     // ==========================================================================
-    // Interests Handlers
+    // Interests Handlers (each interest is a separate DB row)
     // ==========================================================================
-    const handleAddInterest = () => {
-        setCurrentData(prev => ({
-            ...prev,
-            interests: [...prev.interests, { id: generateId(), name: '' }]
-        }));
+    const handleAddInterest = async () => {
+        try {
+            const created = await createInterest(activeLang, { interest: '' });
+            setCurrentData(prev => ({
+                ...prev,
+                interestRows: [...prev.interestRows, created]
+            }));
+        } catch (error) {
+            console.error('Failed to create interest:', error);
+        }
     };
 
-    const handleRemoveInterest = (id: string) => {
-        setCurrentData(prev => ({
-            ...prev,
-            interests: prev.interests.filter(i => i.id !== id)
-        }));
+    const handleRemoveInterest = async (id: string) => {
+        const numId = parseInt(id, 10);
+        try {
+            await deleteInterest(numId);
+            setCurrentData(prev => ({
+                ...prev,
+                interestRows: prev.interestRows.filter(i => i.id !== numId)
+            }));
+        } catch (error) {
+            console.error('Failed to delete interest:', error);
+        }
     };
 
     const handleUpdateInterest = (id: string, field: keyof Interest, value: string) => {
+        const numId = parseInt(id, 10);
         setCurrentData(prev => ({
             ...prev,
-            interests: prev.interests.map(i => i.id === id ? { ...i, [field]: value } : i)
+            interestRows: prev.interestRows.map(i => i.id === numId ? { ...i, [field]: value } : i)
         }));
     };
 
     const handleSaveInterests = async () => {
+        if (currentData.interestRows.length === 0) return;
+
         setSavingSection('interests');
         try {
-            if (currentData.resumeId) {
-                await updateInterests(activeLang, currentData.interests);
-            } else {
-                const newResume = await createResume({
-                    resume_lang: activeLang,
-                    contact: currentData.contact,
-                    skills: [],
-                    languages: [],
-                    interests: currentData.interests,
-                });
-                setCurrentData(prev => ({ ...prev, resumeId: newResume.id }));
-            }
+            await Promise.all(
+                currentData.interestRows.map(row => {
+                    const { id, user_id, resume_lang, ...data } = row;
+                    return updateInterest(row.id, data);
+                })
+            );
         } catch (error) {
             console.error('Failed to save interests:', error);
         } finally {
@@ -351,17 +355,15 @@ export function MyResumePage() {
     // Experiences Handlers
     // ==========================================================================
     const handleAddExperience = async () => {
-        const newExp = {
-            company: '',
-            position: '',
-            startDate: '',
-            endDate: '',
-            current: false,
-            description: '',
-            highlights: [],
-        };
         try {
-            const created = await createExperience(activeLang, newExp);
+            const created = await createExperience(activeLang, {
+                company: '',
+                position: '',
+                start_date: '',
+                end_date: '',
+                current: false,
+                description: '',
+            });
             setCurrentData(prev => ({
                 ...prev,
                 experienceRows: [...prev.experienceRows, created]
@@ -390,31 +392,30 @@ export function MyResumePage() {
             ...prev,
             experienceRows: prev.experienceRows.map(row =>
                 row.id === numId
-                    ? { ...row, experience: { ...row.experience, [field]: value } }
+                    ? { ...row, [field]: value }
                     : row
             )
         }));
     };
 
     const handleSaveExperiences = async () => {
-        if (currentData.experienceRows.length === 0) {
-            return;
-        }
+        if (currentData.experienceRows.length === 0) return;
 
         setSavingSection('experiences');
         try {
             await Promise.all(
                 currentData.experienceRows.map(row => {
                     const originalDesc = originalExperienceDescriptions.get(row.id);
-                    const descriptionChanged = originalDesc !== row.experience.description;
-                    return updateExperience(row.id, row.experience, { descriptionChanged });
+                    const descriptionChanged = originalDesc !== row.description;
+                    const { id, user_id, resume_lang, createdAt, updatedAt, ...data } = row;
+                    return updateExperience(row.id, data, { descriptionChanged });
                 })
             );
             // Update originals to reflect saved state
             setOriginalExperienceDescriptions(prev => {
                 const newMap = new Map(prev);
                 currentData.experienceRows.forEach(row => {
-                    newMap.set(row.id, row.experience.description);
+                    newMap.set(row.id, row.description);
                 });
                 return newMap;
             });
@@ -429,16 +430,15 @@ export function MyResumePage() {
     // Certificates Handlers
     // ==========================================================================
     const handleAddCertificate = async () => {
-        const newCert = {
-            name: '',
-            issuer: '',
-            date: '',
-            expiryDate: '',
-            credentialId: '',
-            url: '',
-        };
         try {
-            const created = await createCertificate(activeLang, newCert);
+            const created = await createCertificate(activeLang, {
+                certificate_name: '',
+                issuer: '',
+                issue_date: '',
+                expiry_date: '',
+                credential_id: '',
+                url: '',
+            });
             setCurrentData(prev => ({
                 ...prev,
                 certificateRows: [...prev.certificateRows, created]
@@ -467,34 +467,23 @@ export function MyResumePage() {
             ...prev,
             certificateRows: prev.certificateRows.map(row =>
                 row.id === numId
-                    ? { ...row, certificate: { ...row.certificate, [field]: value } }
+                    ? { ...row, [field]: value }
                     : row
             )
         }));
     };
 
     const handleSaveCertificates = async () => {
-        if (currentData.certificateRows.length === 0) {
-            return;
-        }
+        if (currentData.certificateRows.length === 0) return;
 
         setSavingSection('certificates');
         try {
             await Promise.all(
                 currentData.certificateRows.map(row => {
-                    const originalName = originalCertificateNames.get(row.id);
-                    const descriptionChanged = originalName !== row.certificate.name;
-                    return updateCertificate(row.id, row.certificate, { descriptionChanged });
+                    const { id, user_id, resume_lang, ...data } = row;
+                    return updateCertificate(row.id, data);
                 })
             );
-            // Update originals to reflect saved state
-            setOriginalCertificateNames(prev => {
-                const newMap = new Map(prev);
-                currentData.certificateRows.forEach(row => {
-                    newMap.set(row.id, row.certificate.name);
-                });
-                return newMap;
-            });
         } catch (error) {
             console.error('Failed to save certificates:', error);
         } finally {
@@ -506,16 +495,12 @@ export function MyResumePage() {
     // Projects Handlers
     // ==========================================================================
     const handleAddProject = async () => {
-        const newProj = {
-            name: '',
-            description: '',
-            technologies: [],
-            startDate: '',
-            endDate: '',
-            url: '',
-        };
         try {
-            const created = await createProject(activeLang, newProj);
+            const created = await createProject(activeLang, {
+                project_name: '',
+                description: '',
+                url: '',
+            });
             setCurrentData(prev => ({
                 ...prev,
                 projectRows: [...prev.projectRows, created]
@@ -544,36 +529,89 @@ export function MyResumePage() {
             ...prev,
             projectRows: prev.projectRows.map(row =>
                 row.id === numId
-                    ? { ...row, project: { ...row.project, [field]: value } }
+                    ? { ...row, [field]: value }
                     : row
             )
         }));
     };
 
     const handleSaveProjects = async () => {
-        if (currentData.projectRows.length === 0) {
-            return;
-        }
+        if (currentData.projectRows.length === 0) return;
 
         setSavingSection('projects');
         try {
             await Promise.all(
                 currentData.projectRows.map(row => {
-                    const originalDesc = originalProjectDescriptions.get(row.id);
-                    const descriptionChanged = originalDesc !== row.project.description;
-                    return updateProject(row.id, row.project, { descriptionChanged });
+                    const { id, user_id, resume_lang, ...data } = row;
+                    return updateProject(row.id, data);
                 })
             );
-            // Update originals to reflect saved state
-            setOriginalProjectDescriptions(prev => {
-                const newMap = new Map(prev);
-                currentData.projectRows.forEach(row => {
-                    newMap.set(row.id, row.project.description);
-                });
-                return newMap;
-            });
         } catch (error) {
             console.error('Failed to save projects:', error);
+        } finally {
+            setSavingSection(null);
+        }
+    };
+
+    // ==========================================================================
+    // Education Handlers
+    // ==========================================================================
+    const handleAddEducation = async () => {
+        try {
+            const created = await createEducation(activeLang, {
+                university: '',
+                degree: '',
+                start_date: '',
+                end_date: '',
+                current: false,
+            });
+            setCurrentData(prev => ({
+                ...prev,
+                educationRows: [...prev.educationRows, created]
+            }));
+        } catch (error) {
+            console.error('Failed to create education:', error);
+        }
+    };
+
+    const handleRemoveEducation = async (id: string) => {
+        const numId = parseInt(id, 10);
+        try {
+            await deleteEducation(numId);
+            setCurrentData(prev => ({
+                ...prev,
+                educationRows: prev.educationRows.filter(e => e.id !== numId)
+            }));
+        } catch (error) {
+            console.error('Failed to delete education:', error);
+        }
+    };
+
+    const handleUpdateEducationLocal = (id: string, field: string, value: string | boolean) => {
+        const numId = parseInt(id, 10);
+        setCurrentData(prev => ({
+            ...prev,
+            educationRows: prev.educationRows.map(row =>
+                row.id === numId
+                    ? { ...row, [field]: value }
+                    : row
+            )
+        }));
+    };
+
+    const handleSaveEducation = async () => {
+        if (currentData.educationRows.length === 0) return;
+
+        setSavingSection('education');
+        try {
+            await Promise.all(
+                currentData.educationRows.map(row => {
+                    const { id, user_id, resume_lang, ...data } = row;
+                    return updateEducation(row.id, data);
+                })
+            );
+        } catch (error) {
+            console.error('Failed to save education:', error);
         } finally {
             setSavingSection(null);
         }
@@ -632,16 +670,9 @@ export function MyResumePage() {
                 </div>
             </div>
 
-            {/* Indicator for resume status */}
-            {!currentData.resumeId && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-md">
-                    {t.noResume}
-                </div>
-            )}
-
             {/* Contact Section */}
             <ContactSection
-                data={currentData.contact}
+                data={currentData.contact ?? { first_name: '', last_name: '', email: '', phone_number: '', linkedin: '', github: '', website: '', location: '' }}
                 onChange={handleContactChange}
                 extraHeaderAction={<SaveButton section="contact" onClick={handleSaveContact} />}
                 lang={activeLang}
@@ -651,7 +682,12 @@ export function MyResumePage() {
             <ExperienceSection
                 experiences={currentData.experienceRows.map(row => ({
                     id: String(row.id),
-                    ...row.experience,
+                    company: row.company,
+                    position: row.position,
+                    start_date: row.start_date,
+                    end_date: row.end_date,
+                    current: row.current,
+                    description: row.description,
                 }))}
                 onAdd={handleAddExperience}
                 onRemove={handleRemoveExperience}
@@ -662,7 +698,12 @@ export function MyResumePage() {
 
             {/* Skills Section */}
             <SkillsSection
-                skills={currentData.skills}
+                skills={currentData.skillRows.map(row => ({
+                    id: String(row.id),
+                    skill: row.skill,
+                    level: row.level ?? '',
+                    category: row.category ?? '',
+                }))}
                 onAdd={handleAddSkill}
                 onRemove={handleRemoveSkill}
                 onUpdate={handleUpdateSkill}
@@ -670,11 +711,33 @@ export function MyResumePage() {
                 lang={activeLang}
             />
 
+            {/* Education Section */}
+            <EducationSection
+                educationRows={currentData.educationRows.map(row => ({
+                    id: String(row.id),
+                    university: row.university,
+                    degree: row.degree,
+                    start_date: row.start_date,
+                    end_date: row.end_date,
+                    current: row.current,
+                }))}
+                onAdd={handleAddEducation}
+                onRemove={handleRemoveEducation}
+                onUpdate={handleUpdateEducationLocal}
+                extraHeaderAction={<SaveButton section="education" onClick={handleSaveEducation} />}
+                lang={activeLang}
+            />
+
             {/* Certificates Section */}
             <CertificatesSection
                 certificates={currentData.certificateRows.map(row => ({
                     id: String(row.id),
-                    ...row.certificate,
+                    certificate_name: row.certificate_name,
+                    issuer: row.issuer,
+                    issue_date: row.issue_date,
+                    expiry_date: row.expiry_date,
+                    credential_id: row.credential_id,
+                    url: row.url,
                 }))}
                 onAdd={handleAddCertificate}
                 onRemove={handleRemoveCertificate}
@@ -687,7 +750,9 @@ export function MyResumePage() {
             <ProjectsSection
                 projects={currentData.projectRows.map(row => ({
                     id: String(row.id),
-                    ...row.project,
+                    project_name: row.project_name,
+                    description: row.description,
+                    url: row.url,
                 }))}
                 onAdd={handleAddProject}
                 onRemove={handleRemoveProject}
@@ -698,7 +763,11 @@ export function MyResumePage() {
 
             {/* Languages Section */}
             <LanguagesSection
-                languages={currentData.languages}
+                languages={currentData.languageRows.map(row => ({
+                    id: String(row.id),
+                    name: row.name,
+                    level: row.level,
+                }))}
                 onAdd={handleAddLanguage}
                 onRemove={handleRemoveLanguage}
                 onUpdate={handleUpdateLanguage}
@@ -708,19 +777,14 @@ export function MyResumePage() {
 
             {/* Interests Section */}
             <InterestsSection
-                interests={currentData.interests}
+                interests={currentData.interestRows.map(row => ({
+                    id: String(row.id),
+                    interest: row.interest,
+                }))}
                 onAdd={handleAddInterest}
                 onRemove={handleRemoveInterest}
                 onUpdate={handleUpdateInterest}
                 extraHeaderAction={<SaveButton section="interests" onClick={handleSaveInterests} />}
-                lang={activeLang}
-            />
-
-            {/* Summary Section */}
-            <SummarySection
-                summary={currentData.summary}
-                onChange={handleSummaryChange}
-                extraHeaderAction={<SaveButton section="summary" onClick={handleSaveSummary} />}
                 lang={activeLang}
             />
         </div>

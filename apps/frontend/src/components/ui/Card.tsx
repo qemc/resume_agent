@@ -53,7 +53,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             >
 
                 {(title || headerAction) && (
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                         <div className="flex items-center gap-3">
                             {sectionNumber && (
                                 <span

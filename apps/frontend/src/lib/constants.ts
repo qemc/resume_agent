@@ -18,18 +18,17 @@ export const FORM_VALIDATION = {
 
 
 export const emptyContact: Contact = {
-    firstName: '', lastName: '', email: '', phone: '',
+    first_name: '', last_name: '', email: '', phone_number: '',
     linkedin: '', github: '', website: '', location: ''
 };
 
 export const emptyResumeData: ResumeData = {
-    resumeId: null,
-    contact: emptyContact,
-    summary: '',
-    skills: [],
-    languages: [],
-    interests: [],
+    contact: null,
     experienceRows: [],
+    educationRows: [],
     certificateRows: [],
     projectRows: [],
+    skillRows: [],
+    languageRows: [],
+    interestRows: [],
 };

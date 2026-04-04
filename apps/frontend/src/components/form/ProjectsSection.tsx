@@ -83,12 +83,12 @@ export function ProjectsSection({
 
     return (
         <Card
-            sectionNumber={5}
+            sectionNumber={6}
             title={t.title}
             badgeColor="teal"
             isOptional
             headerAction={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {extraHeaderAction}
                     <Button
                         variant="primary"
@@ -103,7 +103,7 @@ export function ProjectsSection({
             }
         >
             {projects.length === 0 ? (
-                <p className="text-muted-foreground text-center py-6">
+                <p className="text-muted-foreground text-center py-6 break-words px-2">
                     {t.emptyMessage}
                 </p>
             ) : (
@@ -115,20 +115,15 @@ export function ProjectsSection({
                             canRemove
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Input
-                                    label={t.name}
-                                    required
-                                    value={proj.name}
-                                    onChange={(e) => onUpdate(proj.id, 'name', e.target.value)}
-                                    placeholder={t.namePlaceholder}
-                                />
-                                <Input
-                                    label={t.technologies}
-                                    required
-                                    value={proj.technologies}
-                                    onChange={(e) => onUpdate(proj.id, 'technologies', e.target.value)}
-                                    placeholder={t.technologiesPlaceholder}
-                                />
+                                <div className="md:col-span-2">
+                                    <Input
+                                        label={t.name}
+                                        required
+                                        value={proj.project_name}
+                                        onChange={(e) => onUpdate(proj.id, 'project_name', e.target.value)}
+                                        placeholder={t.namePlaceholder}
+                                    />
+                                </div>
                                 <div className="md:col-span-2">
                                     <Textarea
                                         label={t.description}
