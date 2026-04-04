@@ -65,7 +65,7 @@ export const createTopic = async (
 ): Promise<TopicRow> => {
     const response = await api.post<TopicRow>(
         `/topics/${careerPathId}/${lang}/${experienceId}`,
-        { topic_text: { topic: topicText } }
+        { topic: topicText }
     );
     return response.data;
 };

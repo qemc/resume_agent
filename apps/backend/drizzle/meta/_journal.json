@@ -8,6 +8,13 @@
       "when": 1771872977945,
       "tag": "0000_clammy_changeling",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775333157877,
+      "tag": "0001_steep_tigra",
+      "breakpoints": true
     }
   ]
 }

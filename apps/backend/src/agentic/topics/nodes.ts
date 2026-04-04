@@ -3,7 +3,6 @@ import {
     getAiEnhancedExperience,
     getCareerPath,
     getExperience,
-    updateAiEnhanceLastUpdate
 } from '../utils';
 import {
     unifyPromptEn,
@@ -14,10 +13,6 @@ import {
     refined_topic_pl,
     original_id_en,
     original_id_pl,
-    checkEnhanceAccuracyPromptEn,
-    checkEnhanceAccuracyPromptPl,
-    check_update_en,
-    check_update_pl
 } from './prompts';
 import {
     oai5nano,
@@ -37,9 +32,7 @@ export async function checkAiEnhancedExperience(state: typeof State.State) {
 
     // Career path description handling
     const careerPathId = state.careerPathId
-
     const careerPathDb = await getCareerPath(careerPathId)
-
     const resumeLang: resumeLanguage = careerPathDb.resume_lang as resumeLanguage
 
     const careerPath = {
@@ -50,31 +43,28 @@ export async function checkAiEnhancedExperience(state: typeof State.State) {
 
     // Experience description handling
     const expId = state.expId
-
     const existingEnhance = await getAiEnhancedExperience(expId)
     const exisitingExp = await getExperience(expId)
 
-    let redefinedTopics = existingEnhance?.experience
+    let redefinedBulletPoints = existingEnhance?.experience
 
-    if (!redefinedTopics) {
-        redefinedTopics = (await enhanceAgent.invoke({
+    if (!redefinedBulletPoints) {
+        redefinedBulletPoints = (await enhanceAgent.invoke({
             expId: expId,
-        })).writerRedefinedTopics
+        })).redefinedBulletPoints
     }
 
     const lastUpdateEnhance = existingEnhance?.updatedAt
     const lastUpdateExp = exisitingExp?.updatedAt
 
-
-
-    if (redefinedTopics && existingEnhance && (lastUpdateEnhance < lastUpdateExp)) {
-        redefinedTopics = (await enhanceAgent.invoke({
+    if (redefinedBulletPoints && existingEnhance && (lastUpdateEnhance < lastUpdateExp)) {
+        redefinedBulletPoints = (await enhanceAgent.invoke({
             expId: expId,
-        })).writerRedefinedTopics
+        })).redefinedBulletPoints
     }
 
     return {
-        writerRedefinedTopics: redefinedTopics,
+        redefinedBulletPoints: redefinedBulletPoints,
         careerPath: careerPath,
         resumeLang: resumeLang
     }
@@ -82,7 +72,7 @@ export async function checkAiEnhancedExperience(state: typeof State.State) {
 
 export async function generateTopics(state: typeof State.State) {
 
-    const preTopics = state.writerRedefinedTopics
+    const preTopics = state.redefinedBulletPoints
     const careerPath = state.careerPath
     const lang = state.resumeLang
 

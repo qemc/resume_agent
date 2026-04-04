@@ -80,12 +80,12 @@ export function CertificatesSection({
 
     return (
         <Card
-            sectionNumber={4}
+            sectionNumber={5}
             title={t.title}
             badgeColor="orange"
             isOptional
             headerAction={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {extraHeaderAction}
                     <Button
                         variant="primary"
@@ -100,7 +100,7 @@ export function CertificatesSection({
             }
         >
             {certificates.length === 0 ? (
-                <p className="text-muted-foreground text-center py-6">
+                <p className="text-muted-foreground text-center py-6 break-words px-2">
                     {t.emptyMessage}
                 </p>
             ) : (
@@ -115,8 +115,8 @@ export function CertificatesSection({
                                 <Input
                                     label={t.name}
                                     required
-                                    value={cert.name}
-                                    onChange={(e) => onUpdate(cert.id, 'name', e.target.value)}
+                                    value={cert.certificate_name}
+                                    onChange={(e) => onUpdate(cert.id, 'certificate_name', e.target.value)}
                                     placeholder={t.namePlaceholder}
                                 />
                                 <Input
@@ -130,8 +130,8 @@ export function CertificatesSection({
                                     label={t.date}
                                     type="month"
                                     required
-                                    value={cert.date}
-                                    onChange={(e) => onUpdate(cert.id, 'date', e.target.value)}
+                                    value={cert.issue_date}
+                                    onChange={(e) => onUpdate(cert.id, 'issue_date', e.target.value)}
                                 />
                                 <Input
                                     label={t.url}

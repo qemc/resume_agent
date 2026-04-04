@@ -1,23 +1,23 @@
 import { api } from './api';
 import type {
     Contact,
-    Skill,
-    Language,
-    Interest,
-    ExperienceInput,
-    CertificateInput,
-    ProjectInput,
     ResumeLang,
-    ResumeResponse,
+    ContactDataRow,
     ExperienceRow,
+    EducationRow,
     CertificateRow,
     ProjectRow,
+    SkillRow,
+    LanguageRow,
+    InterestRow,
 } from '@/types';
 
 
-export const getResume = async (lang: ResumeLang): Promise<ResumeResponse | null> => {
+// ── Contact Data ──
+
+export const getContact = async (lang: ResumeLang): Promise<ContactDataRow | null> => {
     try {
-        const response = await api.get<ResumeResponse>(`/resume/${lang}`);
+        const response = await api.get<ContactDataRow>(`/contact/${lang}`);
         return response.data;
     } catch (error: any) {
         if (error.response?.status === 404) return null;
@@ -25,60 +25,59 @@ export const getResume = async (lang: ResumeLang): Promise<ResumeResponse | null
     }
 };
 
-export const createResume = async (data: {
+export const createContact = async (data: {
     resume_lang: ResumeLang;
-    contact: Contact;
-    summary?: string;
-    skills: Skill[];
-    languages: Language[];
-    interests: Interest[];
-}): Promise<ResumeResponse> => {
-    const response = await api.post<ResumeResponse>('/resume', data);
+    email: string;
+    phone_number: string;
+    first_name: string;
+    last_name: string;
+    linkedin?: string;
+    github?: string;
+    website?: string;
+    location?: string;
+}): Promise<ContactDataRow> => {
+    const response = await api.post<ContactDataRow>('/contact', data);
     return response.data;
 };
 
-export const updateContact = async (lang: ResumeLang, contact: Contact): Promise<ResumeResponse> => {
-    const response = await api.patch<ResumeResponse>(`/resume/${lang}`, { contact });
+export const updateContact = async (lang: ResumeLang, contact: Partial<Contact>): Promise<ContactDataRow> => {
+    const response = await api.patch<ContactDataRow>(`/contact/${lang}`, contact);
     return response.data;
 };
 
-export const updateSkills = async (lang: ResumeLang, skills: Skill[]): Promise<ResumeResponse> => {
-    const response = await api.patch<ResumeResponse>(`/resume/${lang}`, { skills });
-    return response.data;
-};
 
-export const updateLanguages = async (lang: ResumeLang, languages: Language[]): Promise<ResumeResponse> => {
-    const response = await api.patch<ResumeResponse>(`/resume/${lang}`, { languages });
-    return response.data;
-};
-
-export const updateInterests = async (lang: ResumeLang, interests: Interest[]): Promise<ResumeResponse> => {
-    const response = await api.patch<ResumeResponse>(`/resume/${lang}`, { interests });
-    return response.data;
-};
-
-export const updateSummary = async (lang: ResumeLang, summary: string): Promise<ResumeResponse> => {
-    const response = await api.patch<ResumeResponse>(`/resume/${lang}`, { summary });
-    return response.data;
-};
-
+// ── Experiences ──
 
 export const getExperiences = async (lang: ResumeLang): Promise<ExperienceRow[]> => {
     const response = await api.get<ExperienceRow[]>(`/experiences/${lang}`);
     return response.data;
 };
 
-export const createExperience = async (lang: ResumeLang, data: ExperienceInput): Promise<ExperienceRow> => {
+export const createExperience = async (lang: ResumeLang, data: {
+    company: string;
+    position: string;
+    start_date?: string;
+    end_date?: string;
+    current?: boolean;
+    description?: string;
+}): Promise<ExperienceRow> => {
     const response = await api.post<ExperienceRow>('/experiences', {
         resume_lang: lang,
-        experience: data,
+        ...data,
     });
     return response.data;
 };
 
 export const updateExperience = async (
     id: number,
-    data: Partial<ExperienceInput>,
+    data: Partial<{
+        company: string;
+        position: string;
+        start_date: string;
+        end_date: string;
+        current: boolean;
+        description: string;
+    }>,
     options?: { descriptionChanged?: boolean }
 ): Promise<ExperienceRow> => {
     const response = await api.patch<ExperienceRow>(`/experiences/${id}`, {
@@ -93,28 +92,80 @@ export const deleteExperience = async (id: number): Promise<void> => {
 };
 
 
+// ── Education ──
+
+export const getEducation = async (lang: ResumeLang): Promise<EducationRow[]> => {
+    const response = await api.get<EducationRow[]>(`/education/${lang}`);
+    return response.data;
+};
+
+export const createEducation = async (lang: ResumeLang, data: {
+    university: string;
+    degree: string;
+    start_date?: string;
+    end_date?: string;
+    current?: boolean;
+}): Promise<EducationRow> => {
+    const response = await api.post<EducationRow>('/education', {
+        resume_lang: lang,
+        ...data,
+    });
+    return response.data;
+};
+
+export const updateEducation = async (
+    id: number,
+    data: Partial<{
+        university: string;
+        degree: string;
+        start_date: string;
+        end_date: string;
+        current: boolean;
+    }>
+): Promise<EducationRow> => {
+    const response = await api.patch<EducationRow>(`/education/${id}`, data);
+    return response.data;
+};
+
+export const deleteEducation = async (id: number): Promise<void> => {
+    await api.delete(`/education/${id}`);
+};
+
+
+// ── Certificates ──
+
 export const getCertificates = async (lang: ResumeLang): Promise<CertificateRow[]> => {
     const response = await api.get<CertificateRow[]>(`/certificates/${lang}`);
     return response.data;
 };
 
-export const createCertificate = async (lang: ResumeLang, data: CertificateInput): Promise<CertificateRow> => {
+export const createCertificate = async (lang: ResumeLang, data: {
+    certificate_name: string;
+    issuer: string;
+    issue_date?: string;
+    expiry_date?: string;
+    credential_id?: string;
+    url?: string;
+}): Promise<CertificateRow> => {
     const response = await api.post<CertificateRow>('/certificates', {
         resume_lang: lang,
-        certificate: data,
+        ...data,
     });
     return response.data;
 };
 
 export const updateCertificate = async (
     id: number,
-    data: Partial<CertificateInput>,
-    options?: { descriptionChanged?: boolean }
+    data: Partial<{
+        certificate_name: string;
+        issuer: string;
+        issue_date: string;
+        expiry_date: string;
+        credential_id: string;
+        url: string;
+    }>
 ): Promise<CertificateRow> => {
-    const response = await api.patch<CertificateRow>(`/certificates/${id}`, {
-        ...data,
-        _descriptionChanged: options?.descriptionChanged ?? true,
-    });
+    const response = await api.patch<CertificateRow>(`/certificates/${id}`, data);
     return response.data;
 };
 
@@ -123,31 +174,106 @@ export const deleteCertificate = async (id: number): Promise<void> => {
 };
 
 
+// ── Projects ──
+
 export const getProjects = async (lang: ResumeLang): Promise<ProjectRow[]> => {
     const response = await api.get<ProjectRow[]>(`/projects/${lang}`);
     return response.data;
 };
 
-export const createProject = async (lang: ResumeLang, data: ProjectInput): Promise<ProjectRow> => {
+export const createProject = async (lang: ResumeLang, data: {
+    project_name: string;
+    description?: string;
+    url?: string;
+}): Promise<ProjectRow> => {
     const response = await api.post<ProjectRow>('/projects', {
         resume_lang: lang,
-        project: data,
+        ...data,
     });
     return response.data;
 };
 
 export const updateProject = async (
     id: number,
-    data: Partial<ProjectInput>,
-    options?: { descriptionChanged?: boolean }
+    data: Partial<{
+        project_name: string;
+        description: string;
+        url: string;
+    }>
 ): Promise<ProjectRow> => {
-    const response = await api.patch<ProjectRow>(`/projects/${id}`, {
-        ...data,
-        _descriptionChanged: options?.descriptionChanged ?? true,
-    });
+    const response = await api.patch<ProjectRow>(`/projects/${id}`, data);
     return response.data;
 };
 
 export const deleteProject = async (id: number): Promise<void> => {
     await api.delete(`/projects/${id}`);
+};
+
+
+// ── Skills ──
+
+export const getSkills = async (lang: ResumeLang): Promise<SkillRow[]> => {
+    const response = await api.get<SkillRow[]>(`/skills/${lang}`);
+    return response.data;
+};
+
+export const createSkill = async (lang: ResumeLang, data: {
+    skill: string;
+    level?: string;
+    category?: string;
+}): Promise<SkillRow> => {
+    const response = await api.post<SkillRow>('/skills', {
+        resume_lang: lang,
+        ...data,
+    });
+    return response.data;
+};
+
+export const deleteSkill = async (id: number): Promise<void> => {
+    await api.delete(`/skills/${id}`);
+};
+
+
+// ── Languages ──
+
+export const getLanguages = async (lang: ResumeLang): Promise<LanguageRow[]> => {
+    const response = await api.get<LanguageRow[]>(`/languages/${lang}`);
+    return response.data;
+};
+
+export const createLanguage = async (lang: ResumeLang, data: {
+    name: string;
+    level: string;
+}): Promise<LanguageRow> => {
+    const response = await api.post<LanguageRow>('/languages', {
+        resume_lang: lang,
+        ...data,
+    });
+    return response.data;
+};
+
+export const deleteLanguage = async (id: number): Promise<void> => {
+    await api.delete(`/languages/${id}`);
+};
+
+
+// ── Interests ──
+
+export const getInterests = async (lang: ResumeLang): Promise<InterestRow[]> => {
+    const response = await api.get<InterestRow[]>(`/interests/${lang}`);
+    return response.data;
+};
+
+export const createInterest = async (lang: ResumeLang, data: {
+    interest: string;
+}): Promise<InterestRow> => {
+    const response = await api.post<InterestRow>('/interests', {
+        resume_lang: lang,
+        ...data,
+    });
+    return response.data;
+};
+
+export const deleteInterest = async (id: number): Promise<void> => {
+    await api.delete(`/interests/${id}`);
 };

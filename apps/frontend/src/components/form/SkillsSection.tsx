@@ -8,11 +8,13 @@ const labels = {
         title: 'Skills',
         addSkill: 'Add Skill',
         placeholder: 'e.g., React, Python, AWS',
+        emptyMessage: 'No skills added yet. Click the button above to add one.',
     },
     PL: {
         title: 'Umiejętności',
         addSkill: 'Dodaj umiejętność',
         placeholder: 'np. React, Python, AWS',
+        emptyMessage: 'Nie dodano jeszcze umiejętności. Kliknij powyższy przycisk, aby dodać.',
     },
 };
 
@@ -81,7 +83,7 @@ export function SkillsSection({
             title={t.title}
             badgeColor="purple"
             headerAction={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {extraHeaderAction}
                     <Button
                         variant="primary"
@@ -95,32 +97,38 @@ export function SkillsSection({
                 </div>
             }
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {skills.map((skill) => (
-                    <CardItem
-                        key={skill.id}
-                        onRemove={() => onRemove(skill.id)}
-                        canRemove={skills.length > 1}
-                        className="p-3"
-                    >
-                        <div className="space-y-2 pr-6">
-                            <Input
-                                required
-                                value={skill.name}
-                                onChange={(e) => onUpdate(skill.id, 'name', e.target.value)}
-                                placeholder={t.placeholder}
-                                className="text-sm"
-                            />
-                            <Select
-                                value={skill.level}
-                                onChange={(e) => onUpdate(skill.id, 'level', e.target.value)}
-                                options={skillLevelOptions}
-                                className="text-sm"
-                            />
-                        </div>
-                    </CardItem>
-                ))}
-            </div>
+            {skills.length === 0 ? (
+                <p className="text-muted-foreground text-center py-6 break-words px-2">
+                    {t.emptyMessage}
+                </p>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {skills.map((skill) => (
+                        <CardItem
+                            key={skill.id}
+                            onRemove={() => onRemove(skill.id)}
+                            canRemove={skills.length > 1}
+                            className="p-3"
+                        >
+                            <div className="space-y-2 pr-6">
+                                <Input
+                                    required
+                                    value={skill.skill}
+                                    onChange={(e) => onUpdate(skill.id, 'skill', e.target.value)}
+                                    placeholder={t.placeholder}
+                                    className="text-sm"
+                                />
+                                <Select
+                                    value={skill.level}
+                                    onChange={(e) => onUpdate(skill.id, 'level', e.target.value)}
+                                    options={skillLevelOptions}
+                                    className="text-sm"
+                                />
+                            </div>
+                        </CardItem>
+                    ))}
+                </div>
+            )}
         </Card>
     );
 }

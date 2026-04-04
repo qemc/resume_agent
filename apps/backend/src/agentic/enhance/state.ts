@@ -3,8 +3,8 @@ import z from "zod";
 import type { resumeLanguage } from "../../types/resume";
 import type { AgentStatus } from "../../types/agent";
 import type {
-    WriterRedefinedTopic,
-    Workstream
+    WriterRedefinedBulletPoint,
+    BulletPointTopicProposal
 } from "../../types/agent";
 
 // state
@@ -13,11 +13,11 @@ export const State = Annotation.Root({
         reducer: (x, y) => y ?? x,
         default: () => ''
     }),
-    workstreams: Annotation<Workstream[]>({
+    bulletPointProposals: Annotation<BulletPointTopicProposal[]>({
         reducer: (x, y) => y ?? x,
         default: () => []
     }),
-    writerRedefinedTopics: Annotation<WriterRedefinedTopic[]>({
+    redefinedBulletPoints: Annotation<WriterRedefinedBulletPoint[]>({
         reducer: (x, y) => y ?? x,
         default: () => []
     }),
@@ -43,17 +43,17 @@ export const State = Annotation.Root({
 // ZOD objects
 
 // ARCHITECT
-export const workstreamSchema = z.object({
-    topicName: z.string().describe('The single sentence or two that describes the workstream'),
-    rawQuotes: z.array(z.string()).describe('A raw quote that proves the workstream existance.')
+export const bulletPointTopicProposal = z.object({
+    redefinedQuote: z.string().describe('The single sentence or two that describes the workstream'),
+    rawQuotes: z.array(z.string()).describe('Raw quotes that proves the workstream existance.')
 })
 
 export const architectOutput = z.object({
-    workstreams: z.array(workstreamSchema).describe("An array of all workstreams found in the user experience")
+    workstreams: z.array(bulletPointTopicProposal).describe("An array of all bullet points proposals found in the user experience")
 })
 
 //WRITER
-export const writerRedefinedTopicSchema = z.object({
-    redefinedTopic: z.string().describe('A redefined topic name'),
-    refinedQuotes: z.array(z.string()).describe('An array of refined quotes')
+export const writerRedefinedBulletPoints = z.object({
+    bulletPointProposal: z.string().describe('A final proposal of the bullet point'),
+    refinedQuotes: z.array(z.string()).describe('An array of refined quotes that were used to create bullet point')
 })

@@ -8,7 +8,7 @@ import { topicsAgent } from './topics/topics';
 import { enhanceAgent } from './enhance/enhance';
 import type { resumeLanguage } from '../types/resume';
 import { generateSingleTopic } from './topics/singleTopic';
-import type { WriterRedefinedTopic } from '../types/agent';
+import type { WriterRedefinedBulletPoint } from '../types/agent';
 
 
 

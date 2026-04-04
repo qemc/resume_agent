@@ -2,7 +2,7 @@ import { State } from "./state";
 import { oai4omini, oai5_1, oai5mini, oai5nano } from "../models";
 import {
     architectOutput,
-    writerRedefinedTopicSchema
+    writerRedefinedBulletPoints
 } from "./state";
 import {
     architectPromptEn,
@@ -15,18 +15,16 @@ import {
     getExperience
 } from "../utils";
 import type { resumeLanguage } from "../../types/resume";
-import type { WriterRedefinedTopic } from "../../types/agent";
 
 const model_so_architect = oai5mini.withStructuredOutput(architectOutput)
-const model_so_writer = oai5_1.withStructuredOutput(writerRedefinedTopicSchema)
+const model_so_writer = oai5_1.withStructuredOutput(writerRedefinedBulletPoints)
 
 export async function fill(state: typeof State.State) {
 
     const expId = state.expId
     const rawExperience = await getExperience(expId)
-
     return {
-        userSummary: rawExperience.experience.description,
+        userSummary: rawExperience.description,
         userId: rawExperience.user_id,
         resumeLang: rawExperience.resume_lang as resumeLanguage,
     }
@@ -45,7 +43,7 @@ export async function architect(state: typeof State.State) {
     })
 
     return {
-        workstreams: result.workstreams
+        bulletPointProposals: result.workstreams
     }
 }
 
@@ -54,15 +52,12 @@ export async function writer(state: typeof State.State) {
     let processSingleWorkstreamPrompt = processSingleWorkstreamPromptEn
     if (state.resumeLang !== 'EN') processSingleWorkstreamPrompt = processSingleWorkstreamPromptPl
 
-
-    const workstreams = state.workstreams
-
-    const resultsToBe = workstreams.map(async (workstream) => {
+    const proposals = state.bulletPointProposals
+    const resultsToBe = proposals.map(async (proposal) => {
 
         const chain = processSingleWorkstreamPrompt.pipe(model_so_writer)
-
-        const topic = workstream.topicName
-        const rawQuotes = workstream.rawQuotes.map((quote) => {
+        const topic = proposal.redefinedQuote
+        const rawQuotes = proposal.rawQuotes.map((quote) => {
             return `-${quote}`
         }).join('\n')
 
@@ -74,7 +69,7 @@ export async function writer(state: typeof State.State) {
 
     const results = await Promise.all(resultsToBe)
     return {
-        writerRedefinedTopics: results
+        redefinedBulletPoints: results
     }
 }
 
@@ -82,7 +77,7 @@ export async function saver(state: typeof State.State) {
 
     try {
         const result = await upsertAiEnhancedExperience(
-            state.writerRedefinedTopics,
+            state.redefinedBulletPoints,
             state.userId,
             state.expId,
             state.resumeLang,

@@ -16,6 +16,7 @@ const labels = {
         companyPlaceholder: 'Acme Inc.',
         positionPlaceholder: 'Software Engineer',
         descriptionPlaceholder: 'Describe your responsibilities, achievements, and the impact you made. Be as detailed as possible - AI will help format this into bullet points later...',
+        emptyMessage: 'No experiences added yet. Click the button above to add one.',
     },
     PL: {
         title: 'Doświadczenie zawodowe',
@@ -29,6 +30,7 @@ const labels = {
         companyPlaceholder: 'Nazwa firmy',
         positionPlaceholder: 'Inżynier oprogramowania',
         descriptionPlaceholder: 'Opisz swoje obowiązki, osiągnięcia i wpływ, jaki miałeś. Bądź jak najbardziej szczegółowy - AI pomoże później sformatować to w punkty...',
+        emptyMessage: 'Nie dodano jeszcze doświadczenia. Kliknij powyższy przycisk, aby dodać.',
     },
 };
 
@@ -89,7 +91,7 @@ export function ExperienceSection({
             title={t.title}
             badgeColor="green"
             headerAction={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {extraHeaderAction}
                     <Button
                         variant="primary"
@@ -103,65 +105,71 @@ export function ExperienceSection({
                 </div>
             }
         >
-            <div className="space-y-4">
-                {experiences.map((exp) => (
-                    <CardItem
-                        key={exp.id}
-                        onRemove={() => onRemove(exp.id)}
-                        canRemove={experiences.length > 1}
-                    >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <Input
-                                label={t.company}
-                                required
-                                value={exp.company}
-                                onChange={(e) => onUpdate(exp.id, 'company', e.target.value)}
-                                placeholder={t.companyPlaceholder}
-                            />
-                            <Input
-                                label={t.position}
-                                required
-                                value={exp.position}
-                                onChange={(e) => onUpdate(exp.id, 'position', e.target.value)}
-                                placeholder={t.positionPlaceholder}
-                            />
-                            <Input
-                                label={t.startDate}
-                                type="month"
-                                required
-                                value={exp.startDate}
-                                onChange={(e) => onUpdate(exp.id, 'startDate', e.target.value)}
-                            />
-                            <div className="space-y-2">
+            {experiences.length === 0 ? (
+                <p className="text-muted-foreground text-center py-6 break-words px-2">
+                    {t.emptyMessage}
+                </p>
+            ) : (
+                <div className="space-y-4">
+                    {experiences.map((exp) => (
+                        <CardItem
+                            key={exp.id}
+                            onRemove={() => onRemove(exp.id)}
+                            canRemove={experiences.length > 1}
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <Input
-                                    label={t.endDate}
+                                    label={t.company}
+                                    required
+                                    value={exp.company}
+                                    onChange={(e) => onUpdate(exp.id, 'company', e.target.value)}
+                                    placeholder={t.companyPlaceholder}
+                                />
+                                <Input
+                                    label={t.position}
+                                    required
+                                    value={exp.position}
+                                    onChange={(e) => onUpdate(exp.id, 'position', e.target.value)}
+                                    placeholder={t.positionPlaceholder}
+                                />
+                                <Input
+                                    label={t.startDate}
                                     type="month"
-                                    value={exp.endDate}
-                                    disabled={exp.current}
-                                    onChange={(e) => onUpdate(exp.id, 'endDate', e.target.value)}
+                                    required
+                                    value={exp.start_date}
+                                    onChange={(e) => onUpdate(exp.id, 'start_date', e.target.value)}
                                 />
-                                <Checkbox
-                                    label={t.currentlyWorking}
-                                    checked={exp.current}
-                                    onChange={(e) => onUpdate(exp.id, 'current', e.target.checked)}
-                                />
+                                <div className="space-y-2">
+                                    <Input
+                                        label={t.endDate}
+                                        type="month"
+                                        value={exp.end_date}
+                                        disabled={exp.current}
+                                        onChange={(e) => onUpdate(exp.id, 'end_date', e.target.value)}
+                                    />
+                                    <Checkbox
+                                        label={t.currentlyWorking}
+                                        checked={exp.current}
+                                        onChange={(e) => onUpdate(exp.id, 'current', e.target.checked)}
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Description field - single text area for AI processing */}
-                        <Textarea
-                            label={t.description}
-                            required
-                            value={exp.description}
-                            onChange={(e) => onUpdate(exp.id, 'description', e.target.value)}
-                            placeholder={t.descriptionPlaceholder}
-                            rows={5}
-                            showCount
-                            maxLength={FORM_VALIDATION.maxDescriptionLength}
-                        />
-                    </CardItem>
-                ))}
-            </div>
+                            {/* Description field - single text area for AI processing */}
+                            <Textarea
+                                label={t.description}
+                                required
+                                value={exp.description}
+                                onChange={(e) => onUpdate(exp.id, 'description', e.target.value)}
+                                placeholder={t.descriptionPlaceholder}
+                                rows={5}
+                                showCount
+                                maxLength={FORM_VALIDATION.maxDescriptionLength}
+                            />
+                        </CardItem>
+                    ))}
+                </div>
+            )}
         </Card>
     );
 }

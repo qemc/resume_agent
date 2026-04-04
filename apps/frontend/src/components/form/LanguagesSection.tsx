@@ -72,11 +72,11 @@ export function LanguagesSection({
 
     return (
         <Card
-            sectionNumber={6}
+            sectionNumber={7}
             title={t.title}
             badgeColor="purple"
             headerAction={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {extraHeaderAction}
                     <Button
                         variant="primary"
@@ -91,7 +91,7 @@ export function LanguagesSection({
             }
         >
             {languages.length === 0 ? (
-                <p className="text-muted-foreground text-center py-6">
+                <p className="text-muted-foreground text-center py-6 break-words px-2">
                     {t.emptyMessage}
                 </p>
             ) : (

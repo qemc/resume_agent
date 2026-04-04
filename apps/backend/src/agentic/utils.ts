@@ -7,11 +7,10 @@ import type {
     AiEnhancedExperienceDb,
     CareerPathsDb
 } from '../db/schema';
-import type { WriterRedefinedTopic } from "../types/agent";
+import type { WriterRedefinedBulletPoint } from "../types/agent";
 import type { resumeLanguage } from "../types/resume";
 
 export async function getCareerPath(careerPathId: number): Promise<CareerPathsDb> {
-
     const result = await db.query.careerPaths.findFirst({
         where: eq(careerPaths.id, careerPathId)
     })
@@ -19,7 +18,6 @@ export async function getCareerPath(careerPathId: number): Promise<CareerPathsDb
 }
 
 export async function getExperience(experienceId: number): Promise<ExperienceDb> {
-
     const result = await db.query.experiences.findFirst({
         where: eq(experiences.id, experienceId)
     })
@@ -27,15 +25,13 @@ export async function getExperience(experienceId: number): Promise<ExperienceDb>
 }
 
 export async function getAiEnhancedExperience(experienceId: number): Promise<AiEnhancedExperienceDb | undefined> {
-
     const result = await db.query.ai_enhanced_experience.findFirst({
         where: eq(ai_enhanced_experience.experience_id, experienceId)
     })
-
     return result
 }
 
-export async function upsertAiEnhancedExperience(AiEnhancedExperience: WriterRedefinedTopic[], userId: number, expId: number, resumeLang: resumeLanguage) {
+export async function upsertAiEnhancedExperience(AiEnhancedExperience: WriterRedefinedBulletPoint[], userId: number, expId: number, resumeLang: resumeLanguage) {
 
     const [inserted] = await db.insert(ai_enhanced_experience).values({
         user_id: userId,
@@ -56,15 +52,15 @@ export async function upsertAiEnhancedExperience(AiEnhancedExperience: WriterRed
     }
 }
 
+export async function updateAiEnhanceLastUpdate(expId: number) {
+    await db.update(ai_enhanced_experience)
+        .set({ updatedAt: new Date() })
+        .where(eq(ai_enhanced_experience.experience_id, expId))
+}
+
 export function defaultPrompt(systemPrompt: string, userPrompt: string) {
     return ChatPromptTemplate.fromMessages([
         ["system", systemPrompt],
         ["human", userPrompt]
     ])
-}
-
-export async function updateAiEnhanceLastUpdate(expId: number) {
-    await db.update(ai_enhanced_experience)
-        .set({ updatedAt: new Date() })
-        .where(eq(ai_enhanced_experience.experience_id, expId))
 }

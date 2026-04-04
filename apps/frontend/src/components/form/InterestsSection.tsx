@@ -61,11 +61,11 @@ export function InterestsSection({
 
     return (
         <Card
-            sectionNumber={7}
+            sectionNumber={8}
             title={t.title}
             badgeColor="orange"
             headerAction={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {extraHeaderAction}
                     <Button
                         variant="primary"
@@ -80,7 +80,7 @@ export function InterestsSection({
             }
         >
             {interests.length === 0 ? (
-                <p className="text-muted-foreground text-center py-6">
+                <p className="text-muted-foreground text-center py-6 break-words px-2">
                     {t.emptyMessage}
                 </p>
             ) : (
@@ -94,8 +94,8 @@ export function InterestsSection({
                             <Input
                                 label={t.interest}
                                 required
-                                value={item.name}
-                                onChange={(e) => onUpdate(item.id, 'name', e.target.value)}
+                                value={item.interest}
+                                onChange={(e) => onUpdate(item.id, 'interest', e.target.value)}
                                 placeholder={t.placeholder}
                             />
                         </CardItem>
