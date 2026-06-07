@@ -6,53 +6,9 @@ import { Textarea } from '@/components/ui';
 import type { ResumeLang, TopicRow, ExperienceRow } from '@/types';
 import { updateTopic, deleteTopic, createTopic } from '@/services/topics';
 import { useTopicsGeneration } from '@/contexts/TopicsGenerationContext';
-
-const labels = {
-    EN: {
-        generateAll: '⚡ Generate All',
-        generating: 'Generating...',
-        regenerating: 'Regenerating...',
-        addManually: 'Add bullet point',
-        edit: 'Edit',
-        save: 'Save',
-        cancel: 'Cancel',
-        delete: 'Delete',
-        regenerate: '⚡',
-        emptyState: 'No bullet points yet.',
-        emptyHint: 'Generate with AI or add manually.',
-        newTopicPlaceholder: 'Type your bullet point...',
-        topicPlaceholder: 'Edit bullet point text...',
-        confirmDeleteTitle: 'Delete bullet point?',
-        confirmDeleteMessage: 'This will permanently remove this bullet point.',
-        confirmDelete: 'Delete',
-        confirmCancel: 'Cancel',
-        regenerateTitle: 'Regenerate bullet point',
-        regenerateHintPlaceholder: 'Optional: guide the AI (e.g. "focus on leadership", "make it shorter")...',
-        regenerateSubmit: '⚡ Regenerate',
-    },
-    PL: {
-        generateAll: '⚡ Generuj wszystkie',
-        generating: 'Generowanie...',
-        regenerating: 'Regenerowanie...',
-        addManually: 'Dodaj punkt',
-        edit: 'Edytuj',
-        save: 'Zapisz',
-        cancel: 'Anuluj',
-        delete: 'Usuń',
-        regenerate: '⚡',
-        emptyState: 'Brak punktów.',
-        emptyHint: 'Wygeneruj z AI lub dodaj ręcznie.',
-        newTopicPlaceholder: 'Wpisz swój punkt...',
-        topicPlaceholder: 'Edytuj tekst punktu...',
-        confirmDeleteTitle: 'Usunąć punkt?',
-        confirmDeleteMessage: 'To trwale usunie ten punkt.',
-        confirmDelete: 'Usuń',
-        confirmCancel: 'Anuluj',
-        regenerateTitle: 'Regeneruj punkt',
-        regenerateHintPlaceholder: 'Opcjonalnie: wskazówka dla AI (np. "skup się na przywództwie", "skróć")...',
-        regenerateSubmit: '⚡ Regeneruj',
-    },
-};
+import { TopicRegenerateDialog } from '@/components/topics/TopicRegenerateDialog';
+import { TopicDeleteDialog } from '@/components/topics/TopicDeleteDialog';
+import { pickLang, topics as topicLabels, common as commonLabels } from '@/lib/translations';
 
 interface ExperienceTopicsSectionProps {
     experience: ExperienceRow;
@@ -69,7 +25,8 @@ export function ExperienceTopicsSection({
     lang,
     onTopicsChanged,
 }: ExperienceTopicsSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(topicLabels, lang);
+    const tc = pickLang(commonLabels, lang);
 
 
     // Global generation context (persists across route changes)
@@ -289,14 +246,14 @@ export function ExperienceTopicsSection({
                                             onClick={handleSaveEdit}
                                             disabled={isSaving || !editText.trim()}
                                         >
-                                            {t.save}
+                                            {tc.save}
                                         </Button>
                                         <Button
                                             size="sm"
                                             variant="ghost"
                                             onClick={handleCancelEdit}
                                         >
-                                            {t.cancel}
+                                            {tc.cancel}
                                         </Button>
                                     </div>
                                 </div>
@@ -322,7 +279,7 @@ export function ExperienceTopicsSection({
                                                 className="h-7 px-2 text-xs"
                                                 onClick={() => handleStartEdit(topic)}
                                             >
-                                                {t.edit}
+                                                {tc.edit}
                                             </Button>
                                             <Button
                                                 size="sm"
@@ -339,7 +296,7 @@ export function ExperienceTopicsSection({
                                                 className="h-7 px-2 text-xs text-destructive hover:text-destructive"
                                                 onClick={() => setDeleteConfirmId(topic.id)}
                                             >
-                                                {t.delete}
+                                                {tc.delete}
                                             </Button>
                                         </div>
                                     )}
@@ -370,7 +327,7 @@ export function ExperienceTopicsSection({
                             onClick={handleAddTopic}
                             disabled={isAdding || !newTopicText.trim()}
                         >
-                            {isAdding ? '...' : t.save}
+                            {isAdding ? '...' : tc.save}
                         </Button>
                         <Button
                             size="sm"
@@ -380,88 +337,29 @@ export function ExperienceTopicsSection({
                                 setNewTopicText('');
                             }}
                         >
-                            {t.cancel}
+                            {tc.cancel}
                         </Button>
                     </div>
                 </div>
             )}
 
-            {/* Regenerate with hint dialog */}
             {regenerateTargetTopic !== null && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                        onClick={() => setRegenerateTargetTopic(null)}
-                    />
-                    <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-                        <h3 className="font-semibold mb-1">{t.regenerateTitle}</h3>
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                            "{regenerateTargetTopic.topic_text}"
-                        </p>
-                        <Textarea
-                            value={regenerateHint}
-                            onChange={(e) => setRegenerateHint(e.target.value)}
-                            placeholder={t.regenerateHintPlaceholder}
-                            rows={2}
-                            className="text-sm mb-4"
-                            autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleRegenerate();
-                                }
-                            }}
-                        />
-                        <div className="flex gap-2 justify-end">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setRegenerateTargetTopic(null)}
-                            >
-                                {t.cancel}
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={handleRegenerate}
-                            >
-                                {t.regenerateSubmit}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <TopicRegenerateDialog
+                    topic={regenerateTargetTopic}
+                    lang={lang}
+                    hint={regenerateHint}
+                    onHintChange={setRegenerateHint}
+                    onCancel={() => setRegenerateTargetTopic(null)}
+                    onSubmit={handleRegenerate}
+                />
             )}
 
-            {/* Delete confirmation modal */}
             {deleteConfirmId !== null && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                        onClick={() => setDeleteConfirmId(null)}
-                    />
-                    <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
-                        <h3 className="font-semibold mb-2">{t.confirmDeleteTitle}</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            {t.confirmDeleteMessage}
-                        </p>
-                        <div className="flex gap-2 justify-end">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setDeleteConfirmId(null)}
-                            >
-                                {t.confirmCancel}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="bg-red-500 text-white hover:bg-red-600"
-                                onClick={handleConfirmDelete}
-                            >
-                                {t.confirmDelete}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <TopicDeleteDialog
+                    lang={lang}
+                    onCancel={() => setDeleteConfirmId(null)}
+                    onConfirm={handleConfirmDelete}
+                />
             )}
         </Card>
     );

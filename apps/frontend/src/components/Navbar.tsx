@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useMatch } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/Button';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/Button';
 import { getCareerPath } from '@/services/careerPaths';
 
 export default function Navbar() {

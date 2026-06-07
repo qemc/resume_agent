@@ -1,14 +1,16 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { setAccessToken, clearAccessToken } from '../services/auth-token';
-import { api } from '../services/api';
-
-interface User {
-    id: number;
-    email: string;
-}
+import {
+    login as apiLogin,
+    register as apiRegister,
+    logout as apiLogout,
+    refreshSession,
+    fetchUserProfile,
+    type AuthUser,
+} from '@/services/auth';
+import { clearAccessToken } from '@/services/auth-token';
 
 interface AuthContextType {
-    user: User | null;
+    user: AuthUser | null;
     isLoading: boolean;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<void>;
@@ -19,22 +21,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Check authentication status on mount (silent refresh)
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                // Try to refresh the token using the HttpOnly cookie
-                const response = await api.post('/auth/refresh', {}, { skipAuthRefresh: true });
-                setAccessToken(response.data.accessToken);
-
-                // Fetch user profile
-                const profileResponse = await api.get('/auth/me');
-                setUser(profileResponse.data.user);
+                await refreshSession();
+                const profile = await fetchUserProfile();
+                setUser(profile);
             } catch {
-                // Not authenticated - that's okay
                 clearAccessToken();
                 setUser(null);
             } finally {
@@ -46,26 +42,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const login = async (email: string, password: string) => {
-        const response = await api.post('/auth/login', { email, password });
-        setAccessToken(response.data.accessToken);
-
-        const profileResponse = await api.get('/auth/me');
-        setUser(profileResponse.data.user);
+        const profile = await apiLogin({ email, password });
+        setUser(profile);
     };
 
     const register = async (email: string, password: string) => {
-        const response = await api.post('/auth/register', { email, password });
-        setAccessToken(response.data.accessToken);
-
-        const profileResponse = await api.get('/auth/me');
-        setUser(profileResponse.data.user);
+        const profile = await apiRegister({ email, password });
+        setUser(profile);
     };
 
     const logout = async () => {
         try {
-            await api.post('/auth/logout');
+            await apiLogout();
         } finally {
-            clearAccessToken();
             setUser(null);
         }
     };

@@ -58,7 +58,7 @@ export async function writer(state: typeof State.State) {
         const chain = processSingleWorkstreamPrompt.pipe(model_so_writer)
         const topic = proposal.redefinedQuote
         const rawQuotes = proposal.rawQuotes.map((quote) => {
-            return `-${quote}`
+            return `${quote}`
         }).join('\n')
 
         return chain.invoke({

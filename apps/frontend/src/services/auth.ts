@@ -1,5 +1,5 @@
-import { api } from "./api";
-import { setAccessToken, clearAccessToken } from "./auth-token";
+import { api } from './api';
+import { setAccessToken, clearAccessToken } from './auth-token';
 
 export interface LoginData {
     email: string;
@@ -11,14 +11,31 @@ export interface RegisterData {
     password: string;
 }
 
-export const login = async (data: LoginData): Promise<void> => {
-    const response = await api.post('/auth/login', data);
+export interface AuthUser {
+    id: number;
+    email: string;
+}
+
+export const refreshSession = async (): Promise<string> => {
+    const response = await api.post<{ accessToken: string }>(
+        '/auth/refresh',
+        {},
+        { skipAuthRefresh: true }
+    );
     setAccessToken(response.data.accessToken);
+    return response.data.accessToken;
 };
 
-export const register = async (data: RegisterData): Promise<void> => {
-    const response = await api.post('/auth/register', data);
+export const login = async (data: LoginData): Promise<AuthUser> => {
+    const response = await api.post<{ accessToken: string }>('/auth/login', data);
     setAccessToken(response.data.accessToken);
+    return fetchUserProfile();
+};
+
+export const register = async (data: RegisterData): Promise<AuthUser> => {
+    const response = await api.post<{ accessToken: string }>('/auth/register', data);
+    setAccessToken(response.data.accessToken);
+    return fetchUserProfile();
 };
 
 export const logout = async (): Promise<void> => {
@@ -26,7 +43,7 @@ export const logout = async (): Promise<void> => {
     clearAccessToken();
 };
 
-export const fetchUserProfile = async () => {
-    const response = await api.get('/auth/me');
+export const fetchUserProfile = async (): Promise<AuthUser> => {
+    const response = await api.get<{ user: AuthUser }>('/auth/me');
     return response.data.user;
 };

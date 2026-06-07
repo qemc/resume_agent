@@ -1,10 +1,7 @@
 import { Button } from '@/components/ui';
 import type { ResumeLang } from '@/types';
+import { pickLang, deleteModal as deleteLabels, common as commonLabels } from '@/lib/translations';
 
-/**
- * Delete Confirmation Modal Component
- * Reusable confirmation dialog for destructive actions.
- */
 export function DeleteConfirmModal({
     isOpen,
     itemName,
@@ -20,57 +17,30 @@ export function DeleteConfirmModal({
 }) {
     if (!isOpen) return null;
 
-    const labels = {
-        EN: {
-            title: 'Delete Career Path',
-            message: 'Are you sure you want to delete',
-            warning: 'This action cannot be undone.',
-            confirm: 'Delete',
-            cancel: 'Cancel',
-        },
-        PL: {
-            title: 'Usuń Ścieżkę Kariery',
-            message: 'Czy na pewno chcesz usunąć',
-            warning: 'Tej operacji nie można cofnąć.',
-            confirm: 'Usuń',
-            cancel: 'Anuluj',
-        },
-    };
-
-    const t = labels[lang];
+    const t = pickLang(deleteLabels, lang);
+    const tc = pickLang(commonLabels, lang);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 onClick={onCancel}
+                aria-hidden="true"
             />
 
-            {/* Modal */}
-            <div className="relative bg-white rounded-xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 animate-in fade-in zoom-in duration-200">
-                <h2 className="text-xl font-bold text-foreground mb-4">
-                    {t.title}
-                </h2>
-                <p className="text-muted-foreground mb-2">
-                    {t.message}:
+            <div className="relative bg-card rounded-xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 border border-border">
+                <h2 className="text-xl font-bold text-foreground mb-2">{t.title}</h2>
+                <p className="text-muted-foreground mb-1">
+                    {t.message} <span className="font-semibold text-foreground">{itemName}</span>?
                 </p>
-                <p className="font-semibold text-foreground mb-4 p-3 bg-gray-100 rounded-lg">
-                    "{itemName}"
-                </p>
-                <p className="text-sm text-red-500 mb-6">
-                    ⚠️ {t.warning}
-                </p>
-                <div className="flex gap-3 justify-end">
-                    <Button variant="outline" onClick={onCancel}>
-                        {t.cancel}
+                <p className="text-sm text-destructive mb-6">{t.warning}</p>
+
+                <div className="flex flex-wrap gap-3 justify-end">
+                    <Button variant="ghost" onClick={onCancel}>
+                        {tc.cancel}
                     </Button>
-                    <Button
-                        variant="ghost"
-                        className="bg-red-500 text-white hover:bg-red-600"
-                        onClick={onConfirm}
-                    >
-                        {t.confirm}
+                    <Button variant="destructive" onClick={onConfirm}>
+                        {tc.delete}
                     </Button>
                 </div>
             </div>

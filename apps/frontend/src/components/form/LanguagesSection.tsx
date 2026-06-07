@@ -1,45 +1,7 @@
 import { Card, CardItem, Input, Button } from '@/components/ui';
-import type { Language, LanguageLevel } from '@/types';
-
-// Labels in English and Polish
-const labels = {
-    EN: {
-        title: 'Languages',
-        addLanguage: 'Add Language',
-        language: 'Language',
-        level: 'Level',
-        placeholder: 'English, Spanish, etc.',
-        emptyMessage: 'No languages added yet. Click the button above to add one.',
-    },
-    PL: {
-        title: 'Języki',
-        addLanguage: 'Dodaj język',
-        language: 'Język',
-        level: 'Poziom',
-        placeholder: 'Angielski, Hiszpański itp.',
-        emptyMessage: 'Nie dodano jeszcze języków. Kliknij powyższy przycisk, aby dodać.',
-    },
-};
-
-/**
- * Plus icon component.
- */
-const PlusIcon = () => (
-    <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-        />
-    </svg>
-);
+import { PlusIcon } from '@/components/icons/PlusIcon';
+import type { Language, LanguageLevel, ResumeLang } from '@/types';
+import { pickLang, languages as languagesLabels } from '@/lib/translations';
 
 export interface LanguagesSectionProps {
     languages: Language[];
@@ -48,7 +10,7 @@ export interface LanguagesSectionProps {
     onUpdate: (id: string, field: keyof Language, value: string) => void;
     extraHeaderAction?: React.ReactNode;
     /** Language for labels (default: 'EN') */
-    lang?: 'EN' | 'PL';
+    lang?: ResumeLang;
 }
 
 const LANGUAGE_LEVELS: LanguageLevel[] = [
@@ -68,7 +30,7 @@ export function LanguagesSection({
     extraHeaderAction,
     lang = 'EN',
 }: LanguagesSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(languagesLabels, lang);
 
     return (
         <Card

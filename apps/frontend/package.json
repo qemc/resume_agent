@@ -7,13 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
     "axios": "^1.13.2",
     "axios-auth-refresh": "^3.3.6",
     "clsx": "^2.1.1",
-    "dotenv": "^17.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.13.0",
@@ -30,6 +30,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5",
-    "vite": "^6.3.0"
+    "vite": "^6.3.0",
+    "vitest": "^3.2.4"
   }
 }

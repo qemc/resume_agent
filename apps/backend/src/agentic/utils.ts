@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { ai_enhanced_experience, careerPaths, experiences } from "../db/schema";
+import { ai_enhanced_experience, careerPaths, experiences, skills, topics } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type {
@@ -7,7 +7,11 @@ import type {
     AiEnhancedExperienceDb,
     CareerPathsDb
 } from '../db/schema';
-import type { WriterRedefinedBulletPoint } from "../types/agent";
+import type {
+    WriterRedefinedBulletPoint, 
+    TopicExperienceResume,
+    ExperienceResume
+} from "../types/agent";
 import type { resumeLanguage } from "../types/resume";
 
 export async function getCareerPath(careerPathId: number): Promise<CareerPathsDb> {
@@ -64,3 +68,38 @@ export function defaultPrompt(systemPrompt: string, userPrompt: string) {
         ["human", userPrompt]
     ])
 }
+
+export async function getCareerPathTopics(carrerPathId: number): Promise<TopicExperienceResume[]>{
+    const result = await db.select().from(topics).where(eq(topics.career_path_id, carrerPathId))
+    const topicExperienceResume: TopicExperienceResume[] = result.map((topic)=> ({
+        experience_id: topic.experience_id,
+        topic_text: topic.topic_text
+    }))
+    return topicExperienceResume
+} 
+
+export async function getResumeExp(expIds: number[]): Promise<ExperienceResume[]> {
+
+    const results = await db.query.experiences.findMany({
+        where: (items, { inArray }) => inArray(items.id, expIds),
+    });
+    const experiencesResume: ExperienceResume[] = results.map((exp) =>({
+        exp_id: exp.id,
+        company_name: exp.company,
+        start_date: exp.start_date, 
+        end_date: exp.end_date,
+        current: exp.current
+    }))
+    return experiencesResume
+}
+
+export async function getUserSkillas(userId: number, language: resumeLanguage){
+
+    const result = await db.query.skills.findMany({
+        where: and(
+            eq(skills.user_id, userId), 
+            eq(skills.resume_lang, language)
+        )
+    })
+    return result
+} 

@@ -1,42 +1,8 @@
 import { Card, CardItem, Input, Select, Button } from '@/components/ui';
-import type { Skill } from '@/types';
+import { PlusIcon } from '@/components/icons/PlusIcon';
+import type { Skill, ResumeLang } from '@/types';
 import { SKILL_LEVELS } from '@/lib/constants';
-
-// Labels in English and Polish
-const labels = {
-    EN: {
-        title: 'Skills',
-        addSkill: 'Add Skill',
-        placeholder: 'e.g., React, Python, AWS',
-        emptyMessage: 'No skills added yet. Click the button above to add one.',
-    },
-    PL: {
-        title: 'Umiejętności',
-        addSkill: 'Dodaj umiejętność',
-        placeholder: 'np. React, Python, AWS',
-        emptyMessage: 'Nie dodano jeszcze umiejętności. Kliknij powyższy przycisk, aby dodać.',
-    },
-};
-
-/**
- * Plus icon component.
- */
-const PlusIcon = () => (
-    <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-        />
-    </svg>
-);
+import { pickLang, skills as skillsLabels } from '@/lib/translations';
 
 /**
  * Props for SkillsSection component.
@@ -53,7 +19,7 @@ export interface SkillsSectionProps {
     /** Extra action to display in header (e.g., Save button) */
     extraHeaderAction?: React.ReactNode;
     /** Language for labels (default: 'EN') */
-    lang?: 'EN' | 'PL';
+    lang?: ResumeLang;
 }
 
 /**
@@ -75,7 +41,7 @@ export function SkillsSection({
     extraHeaderAction,
     lang = 'EN',
 }: SkillsSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(skillsLabels, lang);
 
     return (
         <Card

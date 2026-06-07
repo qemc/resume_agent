@@ -3,7 +3,8 @@ import type {
 } from 'drizzle-orm';
 
 import type {
-    WriterRedefinedBulletPoint
+    WriterRedefinedBulletPoint,
+    ResumeExp
 } from '../types/agent';
 import {
     pgTable,
@@ -23,6 +24,7 @@ export type AiEnhancedExperienceDb = InferSelectModel<typeof ai_enhanced_experie
 export type CareerPathsDb = InferSelectModel<typeof careerPaths>;
 export type TopicDb = InferSelectModel<typeof topics>;
 export type TopicDbInsert = Omit<TopicDb, 'id' | 'createdAt'>
+export type SkillsDb = InferSelectModel<typeof skills> 
 
 
 
@@ -178,4 +180,21 @@ export const topics = pgTable('topics', {
     topic_text: text('topic_text').notNull(),
     topic_quotes: text('topic_quotes').array().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const resumes = pgTable('resumes', {
+    id: serial('id').primaryKey(),
+    career_path_id: integer('career_path_id')
+        .references(() => careerPaths.id, { onDelete: 'cascade' })
+        .notNull(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
+        .notNull(),
+    experiences: jsonb('experiences')
+        .$type<ResumeExp[]>()
+        .notNull(),
+    skills: jsonb('skills')
+        .$type<string[]>()
+        .notNull(),
+    resume_summary: text('resume_summary').notNull(),
 })
