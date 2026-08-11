@@ -9,6 +9,7 @@ import { useTopicsGeneration } from '@/contexts/TopicsGenerationContext';
 import { TopicRegenerateDialog } from '@/components/topics/TopicRegenerateDialog';
 import { TopicDeleteDialog } from '@/components/topics/TopicDeleteDialog';
 import { pickLang, topics as topicLabels, common as commonLabels } from '@/lib/translations';
+import { ErrorBanner } from '@/components/ErrorBanner';
 
 interface ExperienceTopicsSectionProps {
     experience: ExperienceRow;
@@ -33,6 +34,8 @@ export function ExperienceTopicsSection({
     const {
         regeneratingTopicIds,
         generatingAllExperienceIds,
+        lastError,
+        clearError,
         startRegenerate,
         startGenerateAll,
     } = useTopicsGeneration();
@@ -206,6 +209,9 @@ export function ExperienceTopicsSection({
                     </Button>
                 </div>
             </div>
+
+            {/* Error banner for generation failures */}
+            <ErrorBanner message={lastError} onDismiss={clearError} />
 
             {/* Loading state during Generate All */}
             {isGeneratingAll && (

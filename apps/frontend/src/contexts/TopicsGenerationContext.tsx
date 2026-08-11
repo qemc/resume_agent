@@ -6,6 +6,7 @@ import {
     generateSingleTopic as apiGenerateSingle,
     getGenerationStatus,
 } from '@/services/topics';
+import axios from 'axios';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -14,6 +15,11 @@ interface TopicsGenerationContextValue {
     regeneratingTopicIds: Set<number>;
     /** Set of experience IDs currently running "Generate All" */
     generatingAllExperienceIds: Set<number>;
+
+    /** The most recent generation error message, or null if none */
+    lastError: string | null;
+    /** Clear the current error (e.g. on dismiss or new generation start) */
+    clearError: () => void;
 
     /**
      * Start regenerating a single topic. The API call runs in context,
@@ -62,9 +68,22 @@ const POLL_INTERVAL_MS = 3000;
 
 // ─── Provider ───────────────────────────────────────────────────────────────
 
+function extractErrorMessage(error: unknown): string {
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+        return error.response.data.message;
+    }
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return 'An unexpected error occurred during generation.';
+}
+
 export function TopicsGenerationProvider({ children }: { children: ReactNode }) {
     const [regeneratingTopicIds, setRegeneratingTopicIds] = useState<Set<number>>(new Set());
     const [generatingAllExperienceIds, setGeneratingAllExperienceIds] = useState<Set<number>>(new Set());
+    const [lastError, setLastError] = useState<string | null>(null);
+
+    const clearError = useCallback(() => setLastError(null), []);
 
     // Settled listeners — components subscribe to know when to re-fetch
     const settledListenersRef = useRef<Set<() => void>>(new Set());
@@ -168,6 +187,7 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
         onComplete?: (result: TopicRow) => void,
     ) => {
         setRegeneratingTopicIds(prev => new Set(prev).add(topicId));
+        setLastError(null);
 
         startPolling();
 
@@ -178,6 +198,7 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
             })
             .catch(error => {
                 console.error('Failed to regenerate topic:', error);
+                setLastError(extractErrorMessage(error));
                 notifySettled();
             })
             .finally(() => {
@@ -200,6 +221,7 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
         onComplete?: (result: TopicRow[]) => void,
     ) => {
         setGeneratingAllExperienceIds(prev => new Set(prev).add(experienceId));
+        setLastError(null);
 
         startPolling();
 
@@ -210,6 +232,7 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
             })
             .catch(error => {
                 console.error('Failed to generate all topics:', error);
+                setLastError(extractErrorMessage(error));
                 notifySettled();
             })
             .finally(() => {
@@ -224,6 +247,8 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
     const value: TopicsGenerationContextValue = {
         regeneratingTopicIds,
         generatingAllExperienceIds,
+        lastError,
+        clearError,
         startRegenerate,
         startGenerateAll,
         onGenerationSettled,
