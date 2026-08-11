@@ -1,55 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui';
-import { Card } from '@/components/ui';
-import { Input } from '@/components/ui';
-import { Textarea } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 import type { CareerPath, ResumeLang, ExperienceRow, TopicRow } from '@/types';
 import { getCareerPath, updateCareerPath, deleteCareerPath } from '@/services/careerPaths';
 import { getExperiences } from '@/services/resume';
 import { getTopics } from '@/services/topics';
 import { DeleteConfirmModal } from '@/components/DeleteConfirmModal';
+import { CareerPathFormFields } from '@/components/career-paths/CareerPathFormFields';
 import { ExperienceTopicsSection } from '@/components/ExperienceTopicsSection';
+import { ErrorBanner } from '@/components/ErrorBanner';
 import { useTopicsGeneration } from '@/contexts/TopicsGenerationContext';
-
-const labels = {
-    EN: {
-        backLink: '← Back to Career Paths',
-        edit: 'Edit',
-        delete: 'Delete',
-        save: 'Save',
-        saving: 'Saving...',
-        cancel: 'Cancel',
-        titleLabel: 'Title',
-        descriptionLabel: 'Description',
-        namePlaceholder: 'e.g., Data Engineering - Cloud Focus',
-        descriptionPlaceholder: 'Describe your desired position in your own words...',
-        loading: 'Loading career path...',
-        notFound: 'Career path not found.',
-        backToList: 'Go back to Career Paths',
-        experiencesTitle: 'Experience Topics',
-        experiencesLoading: 'Loading experiences...',
-        noExperiences: 'No experiences found. Add experiences in My Resume Data first.',
-    },
-    PL: {
-        backLink: '← Powrót do Ścieżek Kariery',
-        edit: 'Edytuj',
-        delete: 'Usuń',
-        save: 'Zapisz',
-        saving: 'Zapisywanie...',
-        cancel: 'Anuluj',
-        titleLabel: 'Tytuł',
-        descriptionLabel: 'Opis',
-        namePlaceholder: 'np. Inżynieria Danych - Fokus na Chmurę',
-        descriptionPlaceholder: 'Opisz swoją wymarzoną pozycję własnymi słowami...',
-        loading: 'Wczytywanie ścieżki kariery...',
-        notFound: 'Nie znaleziono ścieżki kariery.',
-        backToList: 'Wróć do Ścieżek Kariery',
-        experiencesTitle: 'Tematy Doświadczeń',
-        experiencesLoading: 'Ładowanie doświadczeń...',
-        noExperiences: 'Brak doświadczeń. Dodaj doświadczenia najpierw w Moich Danych CV.',
-    },
-};
+import { pickLang, careerPathDetail as labels, common as commonLabels } from '@/lib/translations';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 export function CareerPathDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -65,6 +27,7 @@ export function CareerPathDetailPage() {
     const [isSaving, setIsSaving] = useState(false);
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Experience & Topics state
     const [experiences, setExperiences] = useState<ExperienceRow[]>([]);
@@ -73,7 +36,8 @@ export function CareerPathDetailPage() {
 
     // Derive language from the career path record
     const lang: ResumeLang = careerPath?.resume_lang ?? 'EN';
-    const t = labels[lang];
+    const t = pickLang(labels, lang);
+    const tc = pickLang(commonLabels, lang);
 
     // Load career path on mount
     useEffect(() => {
@@ -165,7 +129,7 @@ export function CareerPathDetailPage() {
             setCareerPath(updated);
             setIsEditing(false);
         } catch (error) {
-            console.error('Failed to update career path:', error);
+            setErrorMessage(getApiErrorMessage(error, 'Failed to update career path.'));
         } finally {
             setIsSaving(false);
         }
@@ -185,7 +149,7 @@ export function CareerPathDetailPage() {
             await deleteCareerPath(careerPath.id);
             navigate('/career-paths');
         } catch (error) {
-            console.error('Failed to delete career path:', error);
+            setErrorMessage(getApiErrorMessage(error, 'Failed to delete career path.'));
         } finally {
             setShowDeleteModal(false);
         }
@@ -235,7 +199,8 @@ export function CareerPathDetailPage() {
             />
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-                {/* Back Link */}
+                <ErrorBanner message={errorMessage} onDismiss={() => setErrorMessage(null)} />
+
                 <Link
                     to="/career-paths"
                     className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -248,37 +213,22 @@ export function CareerPathDetailPage() {
                     {isEditing ? (
                         /* Edit Mode */
                         <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">
-                                    {t.titleLabel}
-                                </label>
-                                <Input
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                    placeholder={t.namePlaceholder}
-                                    className="text-lg font-semibold"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">
-                                    {t.descriptionLabel}
-                                </label>
-                                <Textarea
-                                    value={editDescription}
-                                    onChange={(e) => setEditDescription(e.target.value)}
-                                    placeholder={t.descriptionPlaceholder}
-                                    rows={8}
-                                />
-                            </div>
+                            <CareerPathFormFields
+                                lang={lang}
+                                name={editName}
+                                description={editDescription}
+                                onNameChange={setEditName}
+                                onDescriptionChange={setEditDescription}
+                            />
                             <div className="flex flex-wrap gap-2 pt-4 border-t">
                                 <Button
                                     onClick={handleSave}
                                     disabled={isSaving || !editName.trim() || !editDescription.trim()}
                                 >
-                                    {isSaving ? t.saving : t.save}
+                                    {isSaving ? tc.saving : tc.save}
                                 </Button>
                                 <Button variant="ghost" onClick={handleCancelEdit}>
-                                    {t.cancel}
+                                    {tc.cancel}
                                 </Button>
                             </div>
                         </div>
@@ -297,7 +247,7 @@ export function CareerPathDetailPage() {
                                     variant="outline"
                                     onClick={handleStartEdit}
                                 >
-                                    {t.edit}
+                                    {tc.edit}
                                 </Button>
                                 <Button
                                     size="sm"
@@ -305,7 +255,7 @@ export function CareerPathDetailPage() {
                                     className="text-destructive hover:text-destructive"
                                     onClick={() => setShowDeleteModal(true)}
                                 >
-                                    {t.delete}
+                                    {tc.delete}
                                 </Button>
                             </div>
                         </div>

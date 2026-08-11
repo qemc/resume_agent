@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { TopicsGenerationProvider } from './contexts/TopicsGenerationContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { TopicsGenerationProvider } from '@/contexts/TopicsGenerationContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import AppLayout from '@/components/AppLayout';
 import { MyResumePage } from '@/pages/MyResumePage';
 import { CareerPathsPage } from '@/pages/CareerPathsPage';
 import { CareerPathDetailPage } from '@/pages/CareerPathDetailPage';
@@ -19,36 +19,13 @@ function App() {
                         {import.meta.env.VITE_ENABLE_REGISTRATION !== 'false' && (
                             <Route path="/register" element={<RegisterPage />} />
                         )}
-                        <Route path="/my-resume" element={
-                            <ProtectedRoute>
-                                <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-                                    <Navbar />
-                                    <main className="py-8">
-                                        <MyResumePage />
-                                    </main>
-                                </div>
-                            </ProtectedRoute>
-                        } />
-                        <Route path="/career-paths" element={
-                            <ProtectedRoute>
-                                <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-                                    <Navbar />
-                                    <main className="py-8">
-                                        <CareerPathsPage />
-                                    </main>
-                                </div>
-                            </ProtectedRoute>
-                        } />
-                        <Route path="/career-paths/:id" element={
-                            <ProtectedRoute>
-                                <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-                                    <Navbar />
-                                    <main className="py-8">
-                                        <CareerPathDetailPage />
-                                    </main>
-                                </div>
-                            </ProtectedRoute>
-                        } />
+                        <Route element={<ProtectedRoute />}>
+                            <Route element={<AppLayout />}>
+                                <Route path="/my-resume" element={<MyResumePage />} />
+                                <Route path="/career-paths" element={<CareerPathsPage />} />
+                                <Route path="/career-paths/:id" element={<CareerPathDetailPage />} />
+                            </Route>
+                        </Route>
                         <Route path="/" element={<Navigate to="/my-resume" replace />} />
                     </Routes>
                 </TopicsGenerationProvider>

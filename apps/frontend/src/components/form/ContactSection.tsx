@@ -1,27 +1,6 @@
 import { Card, Input } from '@/components/ui';
-import type { Contact } from '@/types';
-
-// Labels in English and Polish
-const labels = {
-    EN: {
-        title: 'Contact Information',
-        firstName: 'First Name',
-        lastName: 'Last Name',
-        phone: 'Phone Number',
-        email: 'Email',
-        linkedin: 'LinkedIn Profile',
-        github: 'GitHub Profile',
-    },
-    PL: {
-        title: 'Dane kontaktowe',
-        firstName: 'Imię',
-        lastName: 'Nazwisko',
-        phone: 'Numer telefonu',
-        email: 'E-mail',
-        linkedin: 'Profil LinkedIn',
-        github: 'Profil GitHub',
-    },
-};
+import type { Contact, ResumeLang } from '@/types';
+import { pickLang, contact as contactLabels } from '@/lib/translations';
 
 /**
  * Props for ContactSection component.
@@ -34,7 +13,7 @@ export interface ContactSectionProps {
     /** Extra action to display in header (e.g., Save button) */
     extraHeaderAction?: React.ReactNode;
     /** Language for labels (default: 'EN') */
-    lang?: 'EN' | 'PL';
+    lang?: ResumeLang;
 }
 
 /**
@@ -46,7 +25,7 @@ export interface ContactSectionProps {
  * - LinkedIn and GitHub profiles (optional)
  */
 export function ContactSection({ data, onChange, extraHeaderAction, lang = 'EN' }: ContactSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(contactLabels, lang);
 
     return (
         <Card

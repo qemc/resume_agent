@@ -1,51 +1,7 @@
 import { Card, CardItem, Input, Button } from '@/components/ui';
-import type { Certificate } from '@/types';
-
-// Labels in English and Polish
-const labels = {
-    EN: {
-        title: 'Certificates',
-        addCertificate: 'Add Certificate',
-        name: 'Certificate Name',
-        issuer: 'Issuing Organization',
-        date: 'Date Obtained',
-        url: 'Certificate URL',
-        namePlaceholder: 'AWS Solutions Architect',
-        issuerPlaceholder: 'Amazon Web Services',
-        emptyMessage: 'No certificates added yet. Click the button above to add one.',
-    },
-    PL: {
-        title: 'Certyfikaty',
-        addCertificate: 'Dodaj certyfikat',
-        name: 'Nazwa certyfikatu',
-        issuer: 'Organizacja wydająca',
-        date: 'Data uzyskania',
-        url: 'Link do certyfikatu',
-        namePlaceholder: 'AWS Solutions Architect',
-        issuerPlaceholder: 'Amazon Web Services',
-        emptyMessage: 'Nie dodano jeszcze certyfikatów. Kliknij powyższy przycisk, aby dodać.',
-    },
-};
-
-/**
- * Plus icon component.
- */
-const PlusIcon = () => (
-    <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-        />
-    </svg>
-);
+import { PlusIcon } from '@/components/icons/PlusIcon';
+import type { Certificate, ResumeLang } from '@/types';
+import { pickLang, certificates as certificatesLabels } from '@/lib/translations';
 
 /**
  * Props for CertificatesSection component.
@@ -62,7 +18,7 @@ export interface CertificatesSectionProps {
     /** Extra action to display in header (e.g., Save button) */
     extraHeaderAction?: React.ReactNode;
     /** Language for labels (default: 'EN') */
-    lang?: 'EN' | 'PL';
+    lang?: ResumeLang;
 }
 
 /**
@@ -76,7 +32,7 @@ export function CertificatesSection({
     extraHeaderAction,
     lang = 'EN',
 }: CertificatesSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(certificatesLabels, lang);
 
     return (
         <Card

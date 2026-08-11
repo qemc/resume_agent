@@ -169,6 +169,8 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
     ) => {
         setRegeneratingTopicIds(prev => new Set(prev).add(topicId));
 
+        startPolling();
+
         apiGenerateSingle(params.careerPathId, params.lang, params.experienceId, params.body)
             .then(result => {
                 onComplete?.(result);
@@ -185,7 +187,7 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
                     return next;
                 });
             });
-    }, [notifySettled]);
+    }, [notifySettled, startPolling]);
 
     // ── Generate All Topics for Experience ──
 
@@ -198,6 +200,8 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
         onComplete?: (result: TopicRow[]) => void,
     ) => {
         setGeneratingAllExperienceIds(prev => new Set(prev).add(experienceId));
+
+        startPolling();
 
         apiGenerateAll(params.careerPathId, params.lang, experienceId)
             .then(result => {
@@ -215,7 +219,7 @@ export function TopicsGenerationProvider({ children }: { children: ReactNode }) 
                     return next;
                 });
             });
-    }, [notifySettled]);
+    }, [notifySettled, startPolling]);
 
     const value: TopicsGenerationContextValue = {
         regeneratingTopicIds,

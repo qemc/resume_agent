@@ -1,4 +1,4 @@
-import type { Contact, ResumeData } from '@/types';
+import type { ResumeData } from '@/types';
 
 
 export type { SkillLevel } from '@/types';
@@ -17,7 +17,7 @@ export const FORM_VALIDATION = {
 } as const;
 
 
-export const emptyContact: Contact = {
+export const emptyContact = {
     first_name: '', last_name: '', email: '', phone_number: '',
     linkedin: '', github: '', website: '', location: ''
 };

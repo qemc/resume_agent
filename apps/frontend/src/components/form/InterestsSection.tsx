@@ -1,43 +1,7 @@
 import { Card, CardItem, Input, Button } from '@/components/ui';
-import type { Interest } from '@/types';
-
-// Labels in English and Polish
-const labels = {
-    EN: {
-        title: 'Interests',
-        addInterest: 'Add Interest',
-        interest: 'Interest',
-        placeholder: 'Hiking, Photography, AI, etc.',
-        emptyMessage: 'No interests added yet. Click the button above to add one.',
-    },
-    PL: {
-        title: 'Zainteresowania',
-        addInterest: 'Dodaj zainteresowanie',
-        interest: 'Zainteresowanie',
-        placeholder: 'Turystyka, Fotografia, AI itp.',
-        emptyMessage: 'Nie dodano jeszcze zainteresowań. Kliknij powyższy przycisk, aby dodać.',
-    },
-};
-
-/**
- * Plus icon component.
- */
-const PlusIcon = () => (
-    <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-        />
-    </svg>
-);
+import { PlusIcon } from '@/components/icons/PlusIcon';
+import type { Interest, ResumeLang } from '@/types';
+import { pickLang, interests as interestsLabels } from '@/lib/translations';
 
 export interface InterestsSectionProps {
     interests: Interest[];
@@ -46,7 +10,7 @@ export interface InterestsSectionProps {
     onUpdate: (id: string, field: keyof Interest, value: string) => void;
     extraHeaderAction?: React.ReactNode;
     /** Language for labels (default: 'EN') */
-    lang?: 'EN' | 'PL';
+    lang?: ResumeLang;
 }
 
 export function InterestsSection({
@@ -57,7 +21,7 @@ export function InterestsSection({
     extraHeaderAction,
     lang = 'EN',
 }: InterestsSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(interestsLabels, lang);
 
     return (
         <Card

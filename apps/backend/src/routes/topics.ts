@@ -100,6 +100,10 @@ export async function topicRoutes(app: FastifyInstance) {
                 resumeLang: lang
             })
 
+            if (newTopics.operationStatus === 'failed') {
+                throw new AppError(ERRORS.AI_ERROR, newTopics.error ?? 'Agent failed with no details');
+            }
+
             if (!newTopics) throw new AppError(ERRORS.AI_ERROR);
 
             // Map agent output (Topic[]) to flat DB rows

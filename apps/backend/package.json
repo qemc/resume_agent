@@ -5,7 +5,10 @@
     "scripts": {
         "dev": "tsx watch src/server.ts",
         "build": "tsc",
-        "start": "node dist/server.js"
+        "start": "node dist/server.js",
+        "agent": "tsx src/agentic/main.ts",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate"
     },
     "dependencies": {
         "@fastify/cookie": "^11.0.2",

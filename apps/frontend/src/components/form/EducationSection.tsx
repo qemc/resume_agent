@@ -1,53 +1,7 @@
 import { Card, CardItem, Input, Button, Checkbox } from '@/components/ui';
-import type { Education } from '@/types';
-
-// Labels in English and Polish
-const labels = {
-    EN: {
-        title: 'Education',
-        addEducation: 'Add Education',
-        university: 'University / Institution',
-        degree: 'Degree / Field of Study',
-        startDate: 'Start Date',
-        endDate: 'End Date',
-        currentlyStudying: 'Currently studying here',
-        universityPlaceholder: 'XYZ University',
-        degreePlaceholder: 'Bachelor of Science in Computer Science',
-        emptyMessage: 'No education history added yet. Click the button above to add one.',
-    },
-    PL: {
-        title: 'Edukacja',
-        addEducation: 'Dodaj edukację',
-        university: 'Uczelnia / Instytucja',
-        degree: 'Kierunek / Stopień',
-        startDate: 'Data rozpoczęcia',
-        endDate: 'Data zakończenia',
-        currentlyStudying: 'Obecnie tutaj studiuję',
-        universityPlaceholder: 'Nazwa uczelni',
-        degreePlaceholder: 'Inżynier informatyki',
-        emptyMessage: 'Nie dodano jeszcze edukacji. Kliknij powyższy przycisk, aby dodać.',
-    },
-};
-
-/**
- * Plus icon component.
- */
-const PlusIcon = () => (
-    <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-        />
-    </svg>
-);
+import { PlusIcon } from '@/components/icons/PlusIcon';
+import type { Education, ResumeLang } from '@/types';
+import { pickLang, education as educationLabels } from '@/lib/translations';
 
 /**
  * Props for EducationSection component.
@@ -64,7 +18,7 @@ export interface EducationSectionProps {
     /** Extra action to display in header (e.g., Save button) */
     extraHeaderAction?: React.ReactNode;
     /** Language for labels (default: 'EN') */
-    lang?: 'EN' | 'PL';
+    lang?: ResumeLang;
 }
 
 /**
@@ -78,7 +32,7 @@ export function EducationSection({
     extraHeaderAction,
     lang = 'EN',
 }: EducationSectionProps) {
-    const t = labels[lang];
+    const t = pickLang(educationLabels, lang);
 
     return (
         <Card
