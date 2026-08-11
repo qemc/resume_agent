@@ -24,7 +24,8 @@ export type AiEnhancedExperienceDb = InferSelectModel<typeof ai_enhanced_experie
 export type CareerPathsDb = InferSelectModel<typeof careerPaths>;
 export type TopicDb = InferSelectModel<typeof topics>;
 export type TopicDbInsert = Omit<TopicDb, 'id' | 'createdAt'>
-export type SkillsDb = InferSelectModel<typeof skills> 
+export type SkillsDb = InferSelectModel<typeof skills>
+export type JobApplicationsDb = InferSelectModel<typeof job_applications>
 
 
 
@@ -185,16 +186,42 @@ export const topics = pgTable('topics', {
 export const resumes = pgTable('resumes', {
     id: serial('id').primaryKey(),
     career_path_id: integer('career_path_id')
-        .references(() => careerPaths.id, { onDelete: 'cascade' })
-        .notNull(),
+        .references(() => careerPaths.id, { onDelete: 'set null' }),
     user_id: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
         .notNull(),
+    resume_lang: text('resume_lang').notNull(),
     experiences: jsonb('experiences')
         .$type<ResumeExp[]>()
         .notNull(),
     skills: jsonb('skills')
         .$type<string[]>()
         .notNull(),
-    resume_summary: text('resume_summary').notNull(),
+    resume_summary: text('resume_summary'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const job_applications = pgTable('job_applications', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id')
+        .references(() => users.id, { onDelete: 'cascade' })
+        .notNull(),
+    resume_lang: text('resume_lang').notNull(),
+    raw_job_text: text('raw_job_text').notNull(),
+    cleaned_job_text: text('cleaned_job_text').notNull(),
+    job_title: text('job_title').notNull(),
+    company_name: text('company_name').notNull(),
+    compensation: text('compensation'),
+    location: text('location'),
+    employment_form: text('employment_form'),
+    remote_policy: text('remote_policy'),
+    seniority_level: text('seniority_level'),
+    industry: text('industry'),
+    resume_id: integer('resume_id')
+        .references(() => resumes.id, { onDelete: 'set null' }),
+    status: text('status').default('processing').notNull(),
+    error_message: text('error_message'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })

@@ -26,19 +26,32 @@ export type Topic = {
 // type for easier data extraction 
 export type TopicExperienceResume = {
     experience_id: number,
-    topic_text: string, 
+    topic_text: string,
 }
 
 // type for easier data extraction 
 export type UserExperienceExtraction = {
     exp_id: number,
-    company_name: string, 
-    start_date: string, 
-    end_date: string | null, 
-    current: boolean, 
+    company_name: string,
+    start_date: string,
+    end_date: string | null,
+    current: boolean,
 }
 
 // type to store experience data per resume
 export type ResumeExp = UserExperienceExtraction & {
     topics: string[]
 }
+
+
+export type JobPosting = {
+    cleaned_job_text: string;
+    job_title: string;
+    company_name: string;
+    compensation: string | null;
+    location: string | null;
+    employment_form: string | null;
+    remote_policy: string | null;
+    seniority_level: string | null;
+    industry: string | null;
+};

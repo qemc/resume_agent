@@ -1,20 +1,23 @@
-import {
-    StateGraph,
-    START,
-    END
-} from "@langchain/langgraph";
+import { StateGraph, START, END } from "@langchain/langgraph";
 import { State } from "./state";
-import {
-    fill
+import { 
+    fillNode, 
+    detectLang,
+    careerPathRouter, 
+    alignCareerPathLang
 } from "./nodes";
 
-
 const workflow = new StateGraph(State)
-    .addNode('fill', fill)
-    .addEdge(START, 'fill')
-    .addEdge('fill', END)
+    .addNode('detectLang', detectLang)
+    .addNode('alignCareerPathLang', alignCareerPathLang)
+    .addConditionalEdges(
+        START,
+        careerPathRouter,
+        {
+            true: 'alignCareerPathLang',
+            false: 'detectLang'
+        }
+    )
+    .addEdge('detectLang', END)
 
-export const resumeAgent = workflow.compile()
-
-
-
+export const resumeAgent = workflow.compile();

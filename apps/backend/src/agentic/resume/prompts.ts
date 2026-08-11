@@ -120,3 +120,53 @@ export const selectSkillsPromptPl = defaultPrompt(
     </skills_list>
     `
 )
+
+export const detectLangPrompt = defaultPrompt(
+    `Analyze the provided job posting text and determine its primary language. Respond strictly with exactly one of the following two codes:
+    'PL' (if the text is in Polish)
+    'EN' (if the text is in English)
+    Do not output any other words, explanations, formatting, or punctuation.`,
+    '{raw_job_text}'
+)
+
+export const defineCareerPathPromptEn = defaultPrompt(
+    `You are an expert career strategist and resume architect.
+    Your objective is to select the single best matching career path from the provided list for a specific job posting.
+
+    Instructions:
+    1. Analyze the job posting to understand the primary role, required skill set, and industry domain.
+    2. Evaluate each available career path (ID, name, description) against the job posting requirements.
+    3. Select the single career path that best fits the target job.
+
+    Output:
+    Return a JSON object strictly matching the 'defineCareerPathOutput' schema containing the chosen careerPathId and reasoning.`,
+
+    `<job_posting>
+    {job_posting_text}
+    </job_posting>
+
+    <career_paths>
+    {career_paths_list}
+    </career_paths>`
+)
+
+export const defineCareerPathPromptPl = defaultPrompt(
+    `Jesteś ekspertem ds. strategii kariery i architektem CV.
+    Twoim celem jest wybór jednego, najlepiej dopasowanego ścieżki kariery z dostarczonej listy dla konkretnego ogłoszenia o pracę.
+
+    Instrukcje:
+    1. Przeanalizuj ogłoszenie o pracę, aby zrozumieć główną rolę, wymagany zestaw umiejętności oraz branżę.
+    2. Oceń każdą dostępną ścieżkę kariery (ID, nazwę, opis) pod kątem wymagań z ogłoszenia.
+    3. Wybierz jedną ścieżkę kariery, która najlepiej pasuje do docelowej oferty pracy.
+
+    Wynik:
+    Zwróć obiekt JSON ściśle dopasowany do schematu 'defineCareerPathOutput', zawierający wybrane careerPathId oraz uzasadnienie (reasoning).`,
+
+    `<job_posting>
+    {job_posting_text}
+    </job_posting>
+
+    <career_paths>
+    {career_paths_list}
+    </career_paths>`
+)
