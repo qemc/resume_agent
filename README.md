@@ -1,3 +1,7 @@
+
+# ❗The project has been put on hold❗
+
+
 # Resume Builder
 
 AI-powered resume builder with multi-language support (EN/PL) and AI-generated topic descriptions.
